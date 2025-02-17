@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Таблица с категориями и подкатегориями</title>
+		<!-- Подключение Bootstrap CSS -->
+		<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+		<style>
+			.category-row {
+				cursor: pointer;
+			}
+
+			.subcategory-row {
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="container mt-5">
+			<h2>Категории и подкатегории</h2>
+			<table class="table table-striped">
+				<tbody id="categoriesTable">
+					<tr class="category-row" data-category-id="1">
+						<td colspan="2">Категория 1</td>
+					</tr>
+					<tr class="subcategory-row category-1">
+						<td>&nbsp;&nbsp;&nbsp;Подкатегория 1.1</td>
+					</tr>
+					<tr class="subcategory-row category-1">
+						<td>&nbsp;&nbsp;&nbsp;Подкатегория 1.2</td>
+					</tr>
+					<tr class="category-row" data-category-id="2">
+						<td colspan="2">Категория 2</td>
+					</tr>
+					<tr class="subcategory-row category-2">
+						<td>&nbsp;&nbsp;&nbsp;Подкатегория 2.1</td>
+					</tr>
+					<tr class="subcategory-row category-2">
+						<td>&nbsp;&nbsp;&nbsp;Подкатегория 2.2</td>
+					</tr>
+					<tr class="category-row" data-category-id="3">
+						<td colspan="2">Категория 3</td>
+					</tr>
+					<tr class="subcategory-row category-3">
+						<td>&nbsp;&nbsp;&nbsp;Подкатегория 3.1</td>
+					</tr>
+					<tr class="subcategory-row category-3">
+						<td>&nbsp;&nbsp;&nbsp;Подкатегория 3.2</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Подключение Bootstrap JS и зависимостей -->
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+		<script>
+			$(document).ready(function () { // Функция для установки куки
+function setCookie(name, value, days) {
+var expires = "";
+if (days) {
+var date = new Date();
+date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+expires = "; expires=" + date.toUTCString();
+}
+document.cookie = name + "=" + (
+value || ""
+) + expires + "; path=/";
+}
+
+// Функция для получения значения куки
+function getCookie(name) {
+var nameEQ = name + "=";
+var ca = document.cookie.split(';');
+for (var i = 0; i < ca.length; i++) {
+var c = ca[i];
+while (c.charAt(0) == ' ') 
+c = c.substring(1, c.length);
+
+if (c.indexOf(nameEQ) == 0) 
+return c.substring(nameEQ.length, c.length);
+
+}
+return null;
+}
+
+// Функция для переключения состояния категории
+function toggleCategory(categoryId) {
+var subcategories = $('.subcategory-row.category-' + categoryId);
+var isExpanded = subcategories.is(':visible');
+
+if (isExpanded) {
+subcategories.hide();
+setCookie('category-' + categoryId, 'collapsed', 7);
+} else {
+subcategories.show();
+setCookie('category-' + categoryId, 'expanded', 7);
+}
+}
+
+// Обработчик клика по строке категории
+$('.category-row').on('click', function () {
+var categoryId = $(this).data('category-id');
+toggleCategory(categoryId);
+});
+
+// Инициализация состояний категорий из куки
+$('.category-row').each(function () {
+var categoryId = $(this).data('category-id');
+var state = getCookie('category-' + categoryId);
+
+if (state === 'collapsed') {
+$('.subcategory-row.category-' + categoryId).hide();
+} else if (state === 'expanded') {
+$('.subcategory-row.category-' + categoryId).show();
+} else { // По умолчанию все категории свернуты
+$('.subcategory-row.category-' + categoryId).hide();
+}
+});
+});
+		</script>
+	</body>
+</html>
