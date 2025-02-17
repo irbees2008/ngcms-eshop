@@ -12,18 +12,13 @@
 	</ul>
 </div>
 
-{form}
-
-[regonly]
+{form} [regonly]
 <div class="alert alert-info">
-	Уважаемый посетитель, Вы зашли на сайт как незарегистрированный пользователь.<br/>
-	Мы рекомендуем Вам <a href="/register/">зарегистрироваться</a> либо <a href="/login/">войти</a> на сайт под своим
-	именем.
+	Уважаемый посетитель, Вы зашли на сайт как незарегистрированный
+	пользователь.<br />
+	Мы рекомендуем Вам <a href="/register/">зарегистрироваться</a> либо
+	<a href="/login/">войти</a> на сайт под своим именем.
 </div>
-[/regonly]
-
-[commforbidden]
-<div class="alert alert-info">
-	Комментирование данной новости запрещено.
-</div>
+[/regonly] [commforbidden]
+<div class="alert alert-info">Комментирование данной новости запрещено.</div>
 [/commforbidden]

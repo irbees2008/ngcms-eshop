@@ -89,7 +89,6 @@
 
 				});
 
-
 				$("#reg_password2").change(function () {
 
 					if ($('#reg_password2').val() == '' && $('#reg_password').val() == '') {
@@ -119,9 +118,7 @@
 						$("div#reg_password2").html("<span style='color:#94c37a;'>{{ lang.theme['registration.msg.password_success'] }}</span>");
 					}
 
-
 				});
-
 
 				$("#reg_password").change(function () {
 
@@ -151,7 +148,6 @@
 						$("div#reg_password2").html("<span style='color:#94c37a;'>{{ lang.theme['registration.msg.password_success'] }}</span>");
 					}
 
-
 				});
 
 			};
@@ -167,31 +163,58 @@
 
 </script>
 
-<div class="block-title">{{ lang.registration }}</div>
-<form name="register" action="{{ form_action }}" method="post" onsubmit="return validate();">
-	<input type="hidden" name="type" value="doregister"/>
-	{% for entry in entries %}
-		<div class="label label-table">
-			<label for="{{ entry.id }}">{{ entry.title }}:</label>
-			<span class="input2">{{ entry.input }}</span>
-			<div class="label-desc" id="{{ entry.id }}">{{ entry.descr }}</div>
+<div
+	class="container py-5">
+	<!-- Заголовок -->
+	<h1 class="block-title text-center mb-4">{{ lang.registration }}</h1>
+
+	<!-- Форма регистрации -->
+	<form name="register" action="{{ form_action }}" method="post" onsubmit="return validate();" class="row g-3">
+		<input
+		type="hidden" name="type" value="doregister"/>
+
+		<!-- Поля формы -->
+		{% for entry in entries %}
+			<div class="col-md-6">
+				<label for="{{ entry.id }}" class="form-label">{{ entry.title }}</label>
+				<div class="input-group">
+					<span class="input-group-text">
+						<i class="fas fa-user"></i>
+					</span>
+					<span class="form-control">{{ entry.input }}</span>
+				</div>
+				<small id="{{ entry.id }}" class="form-text text-muted">{{ entry.descr }}</small>
+			</div>
+		{% endfor %}
+
+		<!-- Капча -->
+		{% if flags.hasCaptcha %}
+			<div class="col-md-6">
+				<label for="reg_capcha" class="form-label">{{ lang.captcha }}</label>
+				<div class="input-group mb-3">
+					<input id="reg_capcha" type="text" name="vcode" class="form-control" placeholder="{{ lang.captcha }}" required/>
+					<span class="input-group-text">
+						<img src="{{ admin_url }}/captcha.php" onclick="reload_captcha();" id="img_captcha" style="cursor: pointer;" alt="{{ lang.captcha }}"/>
+					</span>
+				</div>
+				<small class="form-text text-muted">{{ lang.captcha_desc }}</small>
+			</div>
+		{% endif %}
+
+		<!-- Правила и кнопка отправки -->
+		<div class="col-12">
+			<div class="form-check mb-3">
+				<input type="checkbox" name="agree" id="agree" class="form-check-input" required/>
+				<label for="agree" class="form-check-label">{{ lang.theme['registration.rules'] }}</label>
+			</div>
+			<button type="submit" class="btn btn-primary w-100">{{ lang.register }}</button>
 		</div>
-	{% endfor %}
-	{% if flags.hasCaptcha %}
-		<div class="label label-table captcha pull-left">
-			<label for="reg_capcha">{{ lang.captcha }}:</label>
-			<input id="reg_capcha" type="text" name="vcode" class="input">
-			<img src="{{ admin_url }}/captcha.php" onclick="reload_captcha();" id="img_captcha" style="cursor: pointer;" alt="{{ lang.captcha }}"/>
-			<div class="label-desc">{{ lang.captcha_desc }}</div>
-		</div>
-	{% endif %}
-	<div class="clearfix"></div>
-	<div class="label">
-		<label class="pull-left"><input type="checkbox" name="agree">
-			{{ lang.theme['registration.rules'] }}</label>
-		<input type="submit" value="{{ lang.register }}" class="button pull-right">
-	</div>
-</form>
+	</form>
+</div>
+
+<!-- Подключение Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 <script type="text/javascript">
 	function validate() {
 		if (document.register.agree.checked == false) {
