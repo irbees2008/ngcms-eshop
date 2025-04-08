@@ -1,6 +1,7 @@
 <html>
 	<head>
-		<meta content="text/html; charset=windows-1251" http-equiv="Content-Type" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
 		<style>
 			body,
 			td {
