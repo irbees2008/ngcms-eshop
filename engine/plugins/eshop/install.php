@@ -4,7 +4,7 @@ if (!defined('NGCMS')) {
 }
 
 include_once(__DIR__.'/functions.php');
-
+loadPluginLang('eshop', 'config', '', '', ':');
 function createEshopUploadDirs()
 {
     $uploadsDir = getUploadsDir();
@@ -79,15 +79,12 @@ function plugin_eshop_install($action)
 
     createEshopUploadDirs();
 
-    if ($action != 'autoapply') {
-        loadPluginLang('eshop', 'config', '', '', ':');
-    }
     $db_update = array(
         array(
             'table' => 'eshop_products',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
-            'key' => 'primary key(id), KEY `name` (`name`), KEY `brand_id` (`brand_id`), KEY `position` (`position`), KEY `featured` (`featured`), KEY `active` (`active`), KEY `likes` (`likes`), KEY `comments` (`comments`), KEY `stocked` (`stocked`), KEY `views` (`views`), UNIQUE `url` (`url`), FULLTEXT (name), FULLTEXT (annotation), FULLTEXT (body)',
+            'engine' => 'InnoDB', // Изменил на InnoDB для лучшей поддержки транзакций
+            'key' => 'primary key(id), KEY `name` (`name`(191)), KEY `brand_id` (`brand_id`), KEY `position` (`position`), KEY `featured` (`featured`), KEY `active` (`active`), KEY `likes` (`likes`), KEY `comments` (`comments`), KEY `stocked` (`stocked`), KEY `views` (`views`), UNIQUE `url` (`url`(191)), FULLTEXT (name), FULLTEXT (annotation), FULLTEXT (body)',
             'fields' => array(
                 array(
                     'action' => 'cmodify',
@@ -104,7 +101,7 @@ function plugin_eshop_install($action)
                 array(
                     'action' => 'cmodify',
                     'name' => 'url',
-                    'type' => 'char(255)',
+                    'type' => 'char(191)',
                     'params' => 'NOT NULL default \'\'',
                 ),
 
@@ -118,7 +115,7 @@ function plugin_eshop_install($action)
                 array(
                     'action' => 'cmodify',
                     'name' => 'name',
-                    'type' => 'varchar(255)',
+                    'type' => 'varchar(191)',
                     'params' => 'NOT NULL default \'\'',
                 ),
                 array(
@@ -221,7 +218,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_products_comments',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `product_id` (`product_id`)',
             'fields' => array(
                 array(
@@ -247,7 +244,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_products_likes',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key (`id`), KEY `product_id` (`product_id`)',
             'fields' => array(
                 array(
@@ -272,7 +269,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_products_view',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id)',
             'fields' => array(
                 array('action' => 'cmodify', 'name' => 'id', 'type' => 'int(11)', 'params' => 'NOT NULL'),
@@ -288,7 +285,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_features',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `position` (`position`)',
             'fields' => array(
                 array(
@@ -345,7 +342,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_options',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(`product_id`, `feature_id`), KEY `product_id` (`product_id`), KEY `feature_id` (`feature_id`)',
             'fields' => array(
                 array(
@@ -367,7 +364,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_related_products',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(`product_id`, `related_id`), KEY `product_id` (`product_id`), KEY `related_id` (`related_id`), KEY `position` (`position`)',
             'fields' => array(
                 array(
@@ -394,8 +391,8 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_categories',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
-            'key' => 'primary key(id), KEY `name` (`name`), KEY `parent_id` (`parent_id`), UNIQUE `url` (`url`)',
+            'engine' => 'InnoDB',
+            'key' => 'primary key(id), KEY `name` (`name`(191)), KEY `parent_id` (`parent_id`), UNIQUE `url` (`url`(191))',
             'fields' => array(
                 array(
                     'action' => 'cmodify',
@@ -406,7 +403,7 @@ function plugin_eshop_install($action)
                 array(
                     'action' => 'cmodify',
                     'name' => 'url',
-                    'type' => 'char(255)',
+                    'type' => 'char(191)',
                     'params' => 'NOT NULL default \'\'',
                 ),
                 array(
@@ -432,7 +429,7 @@ function plugin_eshop_install($action)
                 array(
                     'action' => 'cmodify',
                     'name' => 'name',
-                    'type' => 'varchar(255)',
+                    'type' => 'varchar(191)',
                     'params' => 'NOT NULL default \'\'',
                 ),
                 array(
@@ -473,7 +470,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_products_categories',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(`category_id`, `product_id`), KEY `product_id` (`product_id`), KEY `category_id` (`category_id`)',
             'fields' => array(
                 array(
@@ -494,7 +491,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_categories_features',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(`category_id`, `feature_id`)',
             'fields' => array(
                 array(
@@ -515,8 +512,8 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_brands',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
-            'key' => 'primary key(id), KEY `url` (`url`), KEY `name` (`name`)',
+            'engine' => 'InnoDB',
+            'key' => 'primary key(id), KEY `url` (`url`(191)), KEY `name` (`name`(191))',
             'fields' => array(
                 array(
                     'action' => 'cmodify',
@@ -527,7 +524,7 @@ function plugin_eshop_install($action)
                 array(
                     'action' => 'cmodify',
                     'name' => 'url',
-                    'type' => 'varchar(255)',
+                    'type' => 'varchar(191)',
                     'params' => 'NOT NULL default \'\'',
                 ),
                 array(
@@ -540,7 +537,7 @@ function plugin_eshop_install($action)
                 array(
                     'action' => 'cmodify',
                     'name' => 'name',
-                    'type' => 'varchar(255)',
+                    'type' => 'varchar(191)',
                     'params' => 'NOT NULL default \'\'',
                 ),
                 array(
@@ -575,7 +572,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_purchases',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `order_id` (`order_id`)',
             'fields' => array(
                 array(
@@ -598,13 +595,13 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_payment',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
-            'key' => 'UNIQUE `name` (`name`)',
+            'engine' => 'InnoDB',
+            'key' => 'UNIQUE `name` (`name`(191))', // Добавлено ограничение длины индекса
             'fields' => array(
                 array(
                     'action' => 'cmodify',
                     'name' => 'name',
-                    'type' => 'varchar(255)',
+                    'type' => 'varchar(191)',
                     'params' => 'NOT NULL default \'\'',
                 ),
                 array(
@@ -619,7 +616,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_orders',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `uniqid` (`uniqid`), KEY `author_id` (`author_id`)',
             'fields' => array(
                 array(
@@ -712,7 +709,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_order_basket',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `order_id` (`order_id`), KEY `linked_id` (`linked_id`)',
             'fields' => array(
                 array(
@@ -744,7 +741,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_compare',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id)',
             'fields' => array(
                 array('action' => 'cmodify', 'name' => 'id', 'type' => 'int', 'params' => 'not null auto_increment'),
@@ -757,7 +754,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_variants',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `product_id` (`product_id`), KEY `position` (`position`), KEY `external_id` (`external_id`)',
             'fields' => array(
                 array(
@@ -825,7 +822,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_images',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `product_id` (`product_id`), KEY `position` (`position`)',
             'fields' => array(
                 array(
@@ -858,7 +855,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_currencies',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `position` (`position`)',
             'fields' => array(
                 array(
@@ -922,7 +919,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_ebasket',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(id), KEY `linked_id` (`linked_id`)',
             'fields' => array(
                 array('action' => 'cmodify', 'name' => 'id', 'type' => 'int', 'params' => 'not null auto_increment'),
@@ -941,7 +938,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_api',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(`id`)',
             'fields' => array(
                 array(
@@ -957,7 +954,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_payment_type',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(`id`)',
             'fields' => array(
                 array(
@@ -991,7 +988,7 @@ function plugin_eshop_install($action)
         array(
             'table' => 'eshop_delivery_type',
             'action' => 'cmodify',
-            'engine' => 'MyISAM',
+            'engine' => 'InnoDB',
             'key' => 'primary key(`id`)',
             'fields' => array(
                 array(
@@ -1027,48 +1024,83 @@ function plugin_eshop_install($action)
 
     switch ($action) {
         case 'confirm':
-            generate_install_page('eshop', 'Cейчас плагин будет установлен');
+            generate_install_page('eshop', 'Сейчас плагин будет установлен');
             break;
+
         case 'autoapply':
         case 'apply':
-            if (fixdb_plugin_install('eshop', $db_update, 'install', ($action == 'autoapply') ? true : false)) {
-                $mysql->query(
-                    "INSERT INTO ".prefix."_eshop_currencies VALUES (1,'доллары','$','USD','1.0000','1.0000',1,0,1), (2,'рубли','руб','RUB','0.0133','1.0000',1,1,1), (3,'гривна','грн','UAH','0.0428','1.0000',1,2,1)"
-                );
+            try {
+                // Устанавливаем кодировку соединения
+                $mysql->query("SET NAMES utf8mb4");
 
-                $mysql->query(
-                    "INSERT INTO ".prefix."_eshop_payment_type VALUES (1,'Наличными при получении','',0,1), (2,'Банковской картой','',0,1)"
-                );
+                // Создаем таблицы
+                if (fixdb_plugin_install('eshop', $db_update, 'install', ($action == 'autoapply'))) {
+                    // Вставляем начальные данные с использованием подготовленных выражений
+                    $currencies = [
+                        [1, 'доллары', '$', 'USD', '1.0000', '1.0000', 1, 0, 1],
+                        [2, 'рубли', 'руб', 'RUB', '0.0133', '1.0000', 1, 1, 1],
+                        [3, 'гривна', 'грн', 'UAH', '0.0428', '1.0000', 1, 2, 1]
+                    ];
+                    $stmt = $mysql->prepare(
+                        "INSERT INTO " . prefix . "_eshop_currencies VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    );
 
-                $mysql->query(
-                    "INSERT INTO ".prefix."_eshop_delivery_type VALUES (1,'Самовывоз','',0,0,1), (2,'Адресная доставка курьером','',0,0,1), (3,'Доставка почтой','',0,0,1)"
-                );
+                    foreach ($currencies as $currency) {
+                        $stmt->execute($currency);
+                    }
 
-                if (!$mysql->record('SHOW INDEX FROM '.prefix.'_eshop_products WHERE Key_name = \'name\'')) {
-                    $mysql->query('alter table '.prefix.'_eshop_products add FULLTEXT (name)');
+                    // Вставка payment_type с использованием подготовленных выражений
+                    $paymentTypes = [
+                        [1, 'Наличными при получении', '', 0, 1],
+                        [2, 'Банковской картой', '', 0, 1]
+                    ];
+                    $stmt = $mysql->prepare(
+                        "INSERT INTO " . prefix . "_eshop_payment_type VALUES (?, ?, ?, ?, ?)"
+                    );
+                    foreach ($paymentTypes as $type) {
+                        $stmt->execute($type);
+                    }
+
+                    // Вставка delivery_type с использованием подготовленных выражений
+                    $deliveryTypes = [
+                        [1, 'Самовывоз', '', 0, 0, 1],
+                        [2, 'Адресная доставка курьером', '', 0, 0, 1],
+                        [3, 'Доставка почтой', '', 0, 0, 1]
+                    ];
+                    $stmt = $mysql->prepare(
+                        "INSERT INTO " . prefix . "_eshop_delivery_type VALUES (?, ?, ?, ?, ?, ?)"
+                    );
+                    foreach ($deliveryTypes as $type) {
+                        $stmt->execute($type);
+                    }
+
+                    // Создаем FULLTEXT-индексы
+                    $tables = [
+                        ['name', 'name'],
+                        ['annotation', 'annotation'],
+                        ['body', 'body']
+                    ];
+
+                    foreach ($tables as $table) {
+                        if (!$mysql->record('SHOW INDEX FROM ' . prefix . '_eshop_products WHERE Key_name = ?', [$table[0]])) {
+                            $mysql->query('ALTER TABLE ' . prefix . '_eshop_products ADD FULLTEXT (`' . $table[1] . '`)');
+                        }
+                    }
+
+                    plugin_mark_installed('eshop');
+                    backupRewritesEshop();
+                } else {
+                    return false;
                 }
-
-                if (!$mysql->record('SHOW INDEX FROM '.prefix.'_eshop_products WHERE Key_name = \'annotation\'')) {
-                    $mysql->query('alter table '.prefix.'_eshop_products add FULLTEXT (annotation)');
-                }
-
-                if (!$mysql->record('SHOW INDEX FROM '.prefix.'_eshop_products WHERE Key_name = \'body\'')) {
-                    $mysql->query('alter table '.prefix.'_eshop_products add FULLTEXT (body)');
-                }
-
-/*                 if (!$mysql->record('SHOW INDEX FROM '.prefix.'_eshop_products WHERE Key_name = \'url\'')) {
-                    $mysql->query('alter table '.prefix.'_eshop_products add UNIQUE KEY `url` (`url`)');
-                } */
-				
-                plugin_mark_installed('eshop');
-                //create_urls();
-
-                backupRewritesEshop();
-            } else {
+            } catch (PDOException $e) {
+                msg([
+                    "type" => "error",
+                    "text" => "Ошибка установки плагина: " . $e->getMessage()
+                ], 1);
                 return false;
             }
 
-            $params = array(
+            $params = [
                 'count' => '8',
                 'count_search' => '8',
                 'count_stocks' => '8',
@@ -1102,39 +1134,38 @@ function plugin_eshop_install($action)
                 'email_notify_back' => '',
 
                 'description_delivery' => '<ul>
-    <li>Новая Почта</li>
-    <li>Другие транспортные службы</li>
-    <li>Курьером по Киеву</li>
-    <li>Самовывоз</li>
-</ul>',
+                    <li>Новая Почта</li>
+                    <li>Другие транспортные службы</li>
+                    <li>Курьером по Киеву</li>
+                    <li>Самовывоз</li>
+                </ul>',
                 'description_order' => '<ul>
-    <li>Наличными при получении</li>
-    <li>Безналичный перевод</li>
-    <li>Приват 24</li>
-    <li>WebMoney</li>
-</ul>',
+                    <li>Наличными при получении</li>
+                    <li>Безналичный перевод</li>
+                    <li>Приват 24</li>
+                    <li>WebMoney</li>
+                </ul>',
                 'description_phones' => '<div class="frame-ico">
-    <span class="icon_work">
-    </span>
-</div>
-<div>
-    <div>
-        Работаем: 
-        <span class="text-el">
-        Пн–Пт 09:00–20:00,
-        <br>
-        Сб 09:00–17:00, Вс выходной
-        </span>
-    </div>
-</div>',
+                    <span class="icon_work"></span>
+                </div>
+                <div>
+                    <div>
+                        Работаем: 
+                        <span class="text-el">
+                        Пн–Пт 09:00–20:00,
+                        <br>
+                        Сб 09:00–17:00, Вс выходной
+                        </span>
+                    </div>
+                </div>'
+            ];
 
-            );
             foreach ($params as $k => $v) {
                 extra_set_param('eshop', $k, $v);
             }
             extra_commit_changes();
+
             break;
     }
-
     return true;
 }
