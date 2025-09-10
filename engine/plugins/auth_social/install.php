@@ -17,7 +17,7 @@ function plugin_auth_social_install($action) {
 	);
 	switch ($action) {
 		case 'confirm':
-			generate_install_page('auth_social', 'Cейчас плагин будет установлен');
+			generate_install_page('auth_social', 'GoGoGo!!');
 			break;
 		case 'autoapply':
 		case 'apply':

@@ -1349,6 +1349,14 @@ function show_eshop($params)
             generateLink('eshop', '', array('alt' => $row['curl'])) :
             generateLink('core', 'plugin', array('plugin' => 'eshop'), array('alt' => $row['curl']));
 
+        // Загружаем плагин bookmarks и получаем кнопки закладок
+        loadPlugin('bookmarks');
+        $plugin_bookmarks_product = '';
+        if (function_exists('bookmarks_eshop_show')) {
+            bookmarks_eshop_show($row['id'], $row);
+            $plugin_bookmarks_product = $template['vars']['plugin_bookmarks_product'] ?? '';
+        }
+
         $tVars = array(
             'id' => $row['id'],
             'code' => $row['code'],
@@ -1387,11 +1395,11 @@ function show_eshop($params)
 
             'likes_form' => $likes_xt->render($likes_tVars),
             'comments_form' => $comments_xt->render($comments_tVars),
+            'plugin_bookmarks_product' => $plugin_bookmarks_product,
         );
 
 
         $template['vars']['mainblock'] .= $xt->render($tVars);
-
 
     } else {
         error404();

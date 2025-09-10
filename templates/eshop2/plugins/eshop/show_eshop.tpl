@@ -22,13 +22,11 @@
 							</dt>
 							<dd class="frame-list-payment">
 								{{ system_flags.eshop.description_order }}
-
 							</dd>
 						</dl>
 					</div>
 				</div>
 				<!--End. Payments method form -->
-
 				{% if (entriesRelated) %}
 					<!-- Start. Similar Products-->
 					<div class="items-products count-items1" id="similar">
@@ -86,11 +84,8 @@
 																</span>
 															{% endif %}
 														</span>
-
 													</div>
-
 												</div>
-
 											</li>
 										{% endfor %}
 									</ul>
@@ -106,10 +101,8 @@
 							</div>
 						</div>
 					</div>
-
 				{% endif %}
 			</div>
-
 			<div class="left-product leftProduct">
 				<div class="o_h">
 					<div class="left-product-left is-add">
@@ -157,7 +150,6 @@
 									</div>
 								</div>
 							</div>
-
 							<div id="wrap" style="top: 0px; z-index: 9999; position: relative">
 								{% if (entriesImg) %}
 									{% for entry in entriesImg %}
@@ -200,7 +192,6 @@
 																																							"></div>
 								{% endif %}
 							</div>
-
 							<div class="horizontal-carousel photo-main-carousel">
 								<div class="group-button-carousel">
 									<button type="button" class="prev arrow" style="display: none">
@@ -211,7 +202,6 @@
 									</button>
 								</div>
 							</div>
-
 						</div>
 					</div>
 					<div class="left-product-right">
@@ -242,7 +232,6 @@
 									</span>
 								</div>
 							</div>
-
 							<div class="f-s_0 buy-block">
 								{% if entriesVariants|length > 1 %}
 									<div class="check-variant-product">
@@ -257,7 +246,6 @@
 										</div>
 									</div>
 								{% endif %}
-
 								<script>
 									variant = "";
 variant_id = {{ entriesVariants[0].id }};
@@ -265,7 +253,6 @@ variant_price = {{ entriesVariants[0].price }};
 variant_compare_price = {{ entriesVariants[0].compare_price }};
 variant_stock = {{ entriesVariants[0].stock }};
 								</script>
-
 								<div class="frame-prices-buy-wish-compare">
 									<div class="frame-for-photo-popup">
 										<div class="frame-prices-buy f-s_0">
@@ -281,7 +268,6 @@ variant_stock = {{ entriesVariants[0].stock }};
 																	{% endif %}
 																</span>
 															</span>
-
 															{% if (not (variant.compare_price == '0.00')) and (not
 													(variant.compare_price == '')) %}
 																<span class="price-add">
@@ -320,20 +306,17 @@ variant_stock = {{ entriesVariants[0].stock }};
 																<span class="text-el">Купить</span>
 															</button>
 														</div>
-
 														<div class="btn-buy-p btn-buy" style="margin-right: 3px">
 															<button type="button" class="btnBuy fastOrderBut" data-id="{{ id }}" data-variant="{{ entriesVariants[0]['id'] }}" style="padding: 0 3px">
 																<span class="icon_cleaner icon_cleaner_buy"></span>
 																<span class="text-el">Купить в один клик</span>
 															</button>
 														</div>
-
 														<div class="label-is-aviable">
 															<span class="icon-is-aviable"></span>
 															<span class="text-el">Есть в наличии</span>
 														</div>
 													</div>
-
 												{% elseif (entriesVariants[0].stock == 1) %}
 													<!-- Start. Collect information about Variants, for future processing -->
 													<div class="frame-count-buy js-variant-5853 js-variant">
@@ -343,7 +326,6 @@ variant_stock = {{ entriesVariants[0].stock }};
 																<span class="text-el">Сообщить о появлении</span>
 															</button>
 														</div>
-
 														<div class="label-is-aviable">
 															<span class="icon-is-aviable"></span>
 															<span class="text-el">На заказ</span>
@@ -387,23 +369,8 @@ variant_stock = {{ entriesVariants[0].stock }};
 										</div>
 										<div class="frame-btn-wish v-a_bl js-variant-5853 js-variant" data-id="5853">
 											<div class="btnWish btn-wish" data-id="5853">
-												<button class="toWishlist isDrop" type="button" data-rel="tooltip" data-title="В избранные" data-drop="#dropAuth">
-													<span class="icon_wish"></span>
-													<span class="text-el d_l">В избранные</span>
-												</button>
-												<button class="inWishlist" type="button" data-rel="tooltip" data-title="В избранныx" style="display: none">
-													<span class="icon_wish"></span>
-													<span class="text-el d_l">В избранныx</span>
-												</button>
+{{ plugin_bookmarks_product }}
 											</div>
-
-											<script>
-												langs["Create list"] = "Создать список";
-langs["Wrong list name"] = "Неверное имя списка";
-langs["Already in Wish List"] = "Уже в Списке Желаний";
-langs["List does not chosen"] = "Список не обран";
-langs["Limit of Wish List finished "] = "Лимит списков пожеланий исчерпан";
-											</script>
 										</div>
 									</div>
 								</div>
@@ -413,21 +380,17 @@ langs["Limit of Wish List finished "] = "Лимит списков пожела�
 								{{ annotation }}
 							</div>
 							<!--  End. Description -->
-
 							<div class="ratebox2 pull-right" data-id="{{ id }}">
-								{{ plugin_bookmarks_news }}{{ likes_form }}
+								{{ likes_form }}
 							</div>
-
 							<!--Start .Share-->
 							<div class="social-product">
 								<div class="social-like d_i-b">
 									<div
 										class="social-tell d_i-b">
-										
 						</div>
 					</div>
 				</div>
-
 				<div
 					class="tabs-product-out f-s_0">
 					<!-- Start. Tabs block-->
@@ -438,7 +401,6 @@ langs["Limit of Wish List finished "] = "Лимит списков пожела�
 						<li class="">
 							<button data-href="#second">описание</button>
 						</li>
-						
 						<li class="">
 							<button type="button" data-href="#comment">
 								<span class="icon_comment-tab"></span>
@@ -474,7 +436,6 @@ langs["Limit of Wish List finished "] = "Лимит списков пожела�
 								</div>
 							</div>
 						</div>
-						
 						<div id="second" class="visited" style="display: none">
 							<div class="inside-padd">
 								<div class="text">{{ body }}</div>
@@ -744,7 +705,6 @@ langs["Limit of Wish List finished "] = "Лимит списков пожела�
 		</div>
 	</div>
 </div>
-
 <!-- Start. Photo Popup Frame-->
 <div class="drop drop-style globalFrameProduct" id="photo"></div>
 <script type="text/template" id="framePhotoProduct">
@@ -813,39 +773,31 @@ var productPhotoCZoom = isTouch ? undefined : true;</script>
 {% endfor %}</div>
 <script>
 $(document).ready(function () {
-
 $(".fastOrderBut").click(function (e) {
 $(".forCenter_fastOrder").css("display", "block");
 $(".overlayDrop_fastOrder").css("display", "block");
 e.preventDefault();
 });
-
 $(".fastPriceBut").click(function (e) {
 $(".forCenter_fastPrice").css("display", "block");
 $(".overlayDrop_fastPrice").css("display", "block");
 e.preventDefault();
 });
-
 $("#send_fastorder").click(function (e) {
-
 var id = $(this).attr('data-id');
 var count = $("input[name='quantity']").attr('value');
-
 var name = $("#fastorder-frame").find("input[name='name']").val();
 var phone = $("#fastorder-frame").find("input[name='phone']").val();
 var address = $("#fastorder-frame").find("input[name='address']").val();
-
 if (variant_id == "" || variant_id == undefined) {
 variant_id = $(this).attr('data-variant');
 }
-
 if (variant_id == "" || variant_id == undefined) {
 if (document.getElementById("variantSwitcher") !== null) {
 variant = $("#variantSwitcher").attr('value').split('|');
 parse_variant_str(variant);
 }
 }
-
 rpcEshopRequest('eshop_ebasket_manage', {
 'action': 'add_fast',
 'ds': 1,
@@ -859,29 +811,22 @@ rpcEshopRequest('eshop_ebasket_manage', {
 }, function (resTX) {
 $("div#fastorder-frame").html("<label><div align='center'>Заказ добавлен. В ближайшее время вам перезвонит наш манеджер.</div></label>");
 });
-
 });
-
 $("#send_fastprice").click(function (e) {
-
 var id = $(this).attr('data-id');
 var count = $("input[name='quantity']").attr('value');
-
 var name = $("#fastprice-frame").find("input[name='name']").val();
 var phone = $("#fastprice-frame").find("input[name='phone']").val();
 var address = $("#fastprice-frame").find("input[name='address']").val();
-
 if (variant_id == "" || variant_id == undefined) {
 variant_id = $(this).attr('data-variant');
 }
-
 if (variant_id == "" || variant_id == undefined) {
 if (document.getElementById("variantSwitcher") !== null) {
 variant = $("#variantSwitcher").attr('value').split('|');
 parse_variant_str(variant);
 }
 }
-
 rpcEshopRequest('eshop_ebasket_manage', {
 'action': 'add_fast',
 'ds': 1,

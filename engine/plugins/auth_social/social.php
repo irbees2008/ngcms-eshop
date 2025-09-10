@@ -107,7 +107,7 @@ function socialAuth() {
 						$imanage = new image_managment();
 						$fname = $userid . '_' . strtolower($_FILES['newavatar']['name']);
 						$ftmp = $_FILES['newavatar']['tmp_name'];
-						$mysql->query("insert into " . prefix . "_images (name, orig_name, folder, date, user, owner_id, category) values (" . db_squote($fname) . ", " . db_squote($fname) . ", '', unix_timestamp(now()), " . db_squote( $auther->getName()) . ", " . db_squote($userid) . ", '1')");
+						$mysql->query("insert into " . prefix . "_images (name, orig_name, folder, date, user, owner_id, category) values (" . db_squote($fname) . ", " . db_squote($fname) . ", '', unix_timestamp(now()), " . db_squote($auther->getName()) . ", " . db_squote($userid) . ", '1')");
 						$rowID = $mysql->record("select LAST_INSERT_ID() as id");
 						if (copy($ftmp, $config['avatars_dir'] . $fname)) {
 							$sz = $imanage->get_size($config['avatars_dir'] . $fname);
@@ -154,7 +154,7 @@ function socialAuth() {
 						$imanage = new image_managment();
 						$fname = $userid . '_' . strtolower($_FILES['newavatar']['name']);
 						$ftmp = $_FILES['newavatar']['tmp_name'];
-						$mysql->query("insert into " . prefix . "_images (name, orig_name, folder, date, user, owner_id, category) values (" . db_squote($fname) . ", " . db_squote($fname) . ", '', unix_timestamp(now()), " . db_squote( $auther->getName()) . ", " . db_squote($idToUpdate) . ", '1')");
+						$mysql->query("insert into " . prefix . "_images (name, orig_name, folder, date, user, owner_id, category) values (" . db_squote($fname) . ", " . db_squote($fname) . ", '', unix_timestamp(now()), " . db_squote($auther->getName()) . ", " . db_squote($idToUpdate) . ", '1')");
 						$rowID = $mysql->record("select LAST_INSERT_ID() as id");
 						if (copy($ftmp, $config['avatars_dir'] . $fname)) {
 							$sz = $imanage->get_size($config['avatars_dir'] . $fname);

@@ -177,6 +177,7 @@ function systemConfigEditForm()
         'list'                  => [
             'captcha_font' => ListFiles('trash', 'ttf'),
             'theme'        => ListFiles('../templates', ''),
+            'admin_skin'   => ListFiles('skins', ''),
             'default_lang' => ListFiles('lang', ''),
             'wm_image'     => ListFiles('trash', ['gif', 'png'], 2),
             'auth_module'  => $auth_modules,
@@ -205,7 +206,7 @@ function systemConfigEditForm()
     $tvars['vars']['multilist'] = $tmpline;
     $tvars['vars']['defaultSection'] = (isset($_REQUEST['selectedOption']) && $_REQUEST['selectedOption']) ? htmlspecialchars($_REQUEST['selectedOption'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : 'news';
 
-    $xt = $twig->loadTemplate('skins/default/tpl/configuration.tpl');
+    $xt = $twig->loadTemplate('skins/'.$config['admin_skin'].'/tpl/configuration.tpl');
 
     return $xt->render($tVars);
 }
@@ -215,6 +216,25 @@ function systemConfigEditForm()
 // Check if SAVE is requested and SAVE was successfull
 if (isset($_REQUEST['subaction']) && ($_REQUEST['subaction'] == 'save') && ($_SERVER['REQUEST_METHOD'] == 'POST') && systemConfigSave()) {
     @include confroot.'config.php';
+    
+    // Clear cache
+    if (isset($_REQUEST['clear_cache']) && $_REQUEST['clear_cache'] == '1') {
+        $cacheDir = root . 'cache/';
+        if (is_dir($cacheDir)) {
+            $files = glob($cacheDir . '*');
+            foreach($files as $file) {
+                if(is_file($file)) {
+                    @unlink($file);
+                }
+            }
+        }
+    }
+    
+    // Redirect to refresh page with new skin
+    if (isset($_REQUEST['redirect']) && $_REQUEST['redirect']) {
+        header('Location: ' . $_REQUEST['redirect']);
+        exit;
+    }
 }
 
 // Show configuration form

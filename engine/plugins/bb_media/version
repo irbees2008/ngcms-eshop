@@ -4,7 +4,7 @@
 
 ID: bb_media
 Name: MEDIA bb code
-Version: 0.11
+Version: 0.12
 Acts: static, index, news_short, news_full
 Config: config.php
 File: bb_media.php
@@ -13,3 +13,5 @@ Type: plugin
 Title: BB код [MEDIA]
 Description: BB код [MEDIA]
 Author: Vitaly A. Ponomarev
+MinEngineBuild: 3740369
+Icons: <i class="fa fa-television fa-3x" aria-hidden="true"></i>

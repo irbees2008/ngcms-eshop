@@ -418,7 +418,7 @@ class ApiEshop
         foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_purchases ".(count($conditions) ? "WHERE ".implode(" AND ",$conditions) : ""),1) as $prow) {
             $prow['info'] = json_decode($prow['info'], true);
             foreach ($prow['info'] as $k_info => $v_info) {
-                $prow['info_string'] .= $k_info." => ". $v_info ."<br/>";
+                $prow['info_string'] .= $k_info." => ".iconv("utf-8", "windows-1251", $v_info)."<br/>";
             }
             $purchases[] = $prow;
         }
@@ -485,7 +485,7 @@ class ApiEshop
                 continue;
             }
             $key = $mapParams[$id];
-            $params[$key] =  $value;
+            $params[$key] = iconv("utf-8", "windows-1251", $value);
         }
 
         return $params;
@@ -628,6 +628,7 @@ class ApiEshop
         return false;
     }
 
+
     public function checkVariantID($id)
     {
         global $mysql;
@@ -688,7 +689,7 @@ class ApiEshop
     {
         global $parse;
 
-        return strtolower($parse->translit( $name), 1, 0);
+        return strtolower($parse->translit(iconv("utf-8", "windows-1251", $name), 1, 0));
     }
 
     public function encodeUtf8Array(&$items)
@@ -696,7 +697,7 @@ class ApiEshop
         array_walk_recursive(
             $items,
             function (&$value, $key) {
-                $value =  $value;
+                $value = iconv("windows-1251", "utf-8", $value);
             }
         );
     }
@@ -792,6 +793,7 @@ class ApiEshop
         return $variants;
     }
 
+
     public function getEntityRow($table, $id)
     {
         global $mysql;
@@ -800,6 +802,7 @@ class ApiEshop
 
         return $row;
     }
+
 
     public function setActiveProducts($value)
     {

@@ -1,71 +1,86 @@
-<table border="0" width="100%" cellspacing="0" cellpadding="0">
-	<tr>
-		<td>
-			<table border="0" width="100%" cellspacing="0" cellpadding="0">
-				<tr>
-					<td><img border="0" src="{tpl_url}/images/2z_40.gif" width="7" height="36"/></td>
-					<td style="background-image:url('{tpl_url}/images/2z_41.gif');" width="100%">
-						&nbsp;<img border="0" src="{tpl_url}/images/bib.gif"/>&nbsp;[link]<b><font color="#FFFFFF">{title}</font></b>[/link]
-					</td>
-					<td><img border="0" src="{tpl_url}/images/2z_44.gif" width="7" height="36"/></td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<table border="0" width="100%" cellspacing="0" cellpadding="0">
-				<tr>
-					<td><img border="0" src="{tpl_url}/images/2z_49.gif" width="7" height="24"/></td>
-					<td style="background-image:url('{tpl_url}/images/2z_50.gif');" width="100%">Категория: {category} |
-						Автор: {author} | ({date}) [edit-news]Редактировать[/edit-news] [del-news]Удалить[/del-news]
-					</td>
-					<td><img border="0" src="{tpl_url}/images/2z_51.gif" width="7" height="24"/></td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<table border="0" width="100%" cellspacing="0" cellpadding="0">
-				<tr>
-					<td style="background-image:url('{tpl_url}/images/2z_54.gif');" width="7">&nbsp;</td>
-					<td bgcolor="#FFFFFF">[icon]<img src="{icon}" alt="" border="0"/>[/icon]{short-story}<br/>[isplugin
-						finance][finance]<br/>Стоимость доступа составляет: ${fin_price} [fin_on] <b>(оплачено)</b>[/fin_on][fin_off](не
-						оплачено)[/fin_off][/finance][/isplugin][isplugin rating]<br/>{plugin_rating}[/isplugin][isplugin
-						tags][tags]
-						<div align="right"><img src="{tpl_url}/images/tag.png" width="13" height="13" alt="Мета-теги"/>
-							{tags}
+<li class="globalFrameProduct {% if (entry.variants[0].stock == 0) or (entry.variants[0].stock == 1) %}not-avail{% elseif (entry.variants[0].stock == 5) %}to-cart{% endif %}" data-pos="top" data-equalhorizcell="" style="height: 321px;">
+	<a href="{{entry.fulllink}}" class="frame-photo-title">
+		<span class="photo-block">
+			<span class="helper"></span>
+			{% if (entry.images[0].filepath) %}<img src='{{home}}/uploads/eshop/products/{{entry.id}}/thumb/{{entry.images[0].filepath}}' class="vImg">{% else %}<img src='{{home}}/engine/plugins/eshop/tpl/img/img_none.jpg' class="vImg">
+			{% endif %}
+		</span>
+		<span class="title">{{ entry.name }}</span>
+	</a>
+	<!-- End. Photo & Name product -->
+	<div class="description">
+		<div
+			class="frame-prices f-s_0">
+			<!-- Start. Product price-->
+			<span class="current-prices f-s_0">
+				<span class="price-new">
+					<span>
+						{% if (entry.variants[0].price) %}
+							<span class="price priceVariant">{{ (entry.variants[0].price * system_flags.eshop.currency[0].rate_from / system_flags.eshop.current_currency.rate_from)|number_format(2, '.', '') }}</span>
+							{{ system_flags.eshop.current_currency.sign }}
+						{% endif %}
+					</span>
+				</span>
+				{% if (not (entry.variants[0].compare_price == '0.00')) and (not (entry.variants[0].compare_price == '')) %}
+					<span class="price-add">
+						<span>
+							<span class="price addCurrPrice">
+								<s>{{ (entry.variants[0].compare_price * system_flags.eshop.currency[0].rate_from / system_flags.eshop.current_currency.rate_from)|number_format(2, '.', '') }}</s>
+							</span>
+							<s>{{ system_flags.eshop.current_currency.sign }}</s>
+						</span>
+					</span>
+				{% endif %}
+			</span>
+			<!-- End. Product price-->
+		</div>
+		<!-- End. Prices-->
+		<div class="funcs-buttons frame-without-top">
+			<div class="no-vis-table">
+				{% if (entry.variants[0].stock == 0) or (entry.variants[0].stock == 1) %}
+					<div class="js-variant-5834 js-variant">
+						<div class="alert-exists">Нет в наличии</div>
+						<div class="btn-not-avail">
+							<button class="infoBut isDrop" type="button" data-drop=".drop-report"></button>
 						</div>
-						[/tags][/isplugin]
-					</td>
-					<td style="background-image:url('{tpl_url}/images/2z_59.gif');" width="7">&nbsp;</td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<table border="0" width="100%" cellspacing="0" cellpadding="0">
-				<tr>
-					<td><img border="0" src="{tpl_url}/images/2z_63.gif" width="7" height="19"/></td>
-					<td style="background-image:url('{tpl_url}/images/2z_64.gif');" width="100%" class="mw_links">&nbsp;[comheader]Комментарии:
-						{comments-num} |[/comheader]&nbsp;Просмотров: {views} | {plugin_bookmarks_news} |[full-link]<b>Подробнее</b>[/full-link]
-					</td>
-					<td><img border="0" src="{tpl_url}/images/2z_65.gif" width="7" height="19"/></td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<table border="0" width="100%" cellspacing="0" cellpadding="0">
-				<tr>
-					<td><img border="0" src="{tpl_url}/images/2z_68.gif" width="7" height="4"/></td>
-					<td style="background-image:url('{tpl_url}/images/2z_69.gif');" width="100%"></td>
-					<td><img border="0" src="{tpl_url}/images/2z_70.gif" width="7" height="4"/></td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-</table>
+					</div>
+				{% elseif (entry.variants[0].stock == 5) %}
+					<!-- Start. Collect information about Variants, for future processing -->
+					<div class="frame-count-buy js-variant-{{entry.id}} js-variant">
+						<div class="btn-buy btn-cart d_n">
+							<button type="button" data-id="{{entry.id}}" class="btnBuy">
+								<span class="icon_cleaner icon_cleaner_buy"></span>
+								<span class="text-el">В корзине</span>
+							</button>
+						</div>
+						<div class="btn-buy">
+							<button type="button" class="btnBuy orderBut" data-id="{{entry.id}}">
+								<span class="icon_cleaner icon_cleaner_buy"></span>
+								<span class="text-el">Купить</span>
+							</button>
+						</div>
+					</div>
+					<div class="frame-count-buy js-variant-{{entry.id}} js-variant" style="display:none">
+						<div class="btn-buy btn-cart d_n">
+							<button type="button" data-id="{{entry.id}}" class="btnBuy">
+								<span class="icon_cleaner icon_cleaner_buy"></span>
+								<span class="text-el">В корзине</span>
+							</button>
+						</div>
+						<div class="btn-buy">
+							<button type="button" class="btnBuy orderBut" data-id="{{entry.id}}">
+								<span class="icon_cleaner icon_cleaner_buy"></span>
+								<span class="text-el">Купить</span>
+							</button>
+						</div>
+					</div>
+				{% endif %}
+			</div>
+		</div>
+		<!-- End. Collect information about Variants, for future processing -->
+<div class="frame-without-top" style="padding-top: 50px;">
+			{{ plugin_bookmarks_product }}
+			<div class="decor-element"></div>
+		</div>
+	</div>
+</li>

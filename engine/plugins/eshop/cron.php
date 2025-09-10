@@ -1,5 +1,5 @@
 <?php
-header('Content-type: text/html; charset=utf8');
+header('Content-type: text/html; charset=cp1251');
 
 $yml_url = "https://sporttop.com.ua/sporttop_fitness.xml";
 
@@ -9,6 +9,7 @@ include_once __DIR__.'/../../core.php';
 include_once(__DIR__.'/functions');
 
 include_once(__DIR__.'/import.class.php');
+
 
 $file = file_get_contents($yml_url);
 $xml = new SimpleXMLElement($file);
@@ -23,10 +24,10 @@ $ofs = new YMLOffer();
 foreach ($xml->shop->offers->offer as $key => $offer) {
     $oif = (int)$offer->attributes()->id;
 
-    $name =  (string)$offer->name;
+    $name = iconv('utf-8', 'windows-1251', (string)$offer->name);
 
     if ($name == "") {
-        $name = trim((string)$offer->model." ".(string)$offer->barcode);
+        $name = iconv('utf-8', 'windows-1251', trim((string)$offer->model." ".(string)$offer->barcode));
     }
 
     if ($name != "") {
@@ -36,7 +37,7 @@ foreach ($xml->shop->offers->offer as $key => $offer) {
 
     if ($url) {
         
-        $vendorCode = (string)$offer->vendorCode;
+        $vendorCode = iconv('utf-8', 'windows-1251', (string)$offer->vendorCode);
         
         if ($vendorCode){        
             $prd_row = $mysql->record(
@@ -60,5 +61,6 @@ foreach ($xml->shop->offers->offer as $key => $offer) {
 
 generate_catz_cache(true);
 generate_features_cache(true);
+
 
 file_put_contents(__DIR__."/log.txt", 'work '.time().'\n', FILE_APPEND);

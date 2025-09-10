@@ -1,84 +1,110 @@
 <?php
 // Protect against hack attempts
-if (!defined('NGCMS')) die ('HAL');
+if (!defined('NGCMS')) die('HAL');
+
+// Очищаем все возможные буферы вывода
+while (ob_get_level()) ob_end_clean();
+
+// Устанавливаем заголовок XML ДО любого вывода
+header('Content-Type: application/xml; charset=utf-8');
+
 include_once root . "/includes/news.php";
+
 register_plugin_page('rss_export', '', 'plugin_rss_export', 0);
 register_plugin_page('rss_export', 'category', 'plugin_rss_export_category', 0);
-function plugin_rss_export() {
 
-	plugin_rss_export_generate();
+function plugin_rss_export() {
+    plugin_rss_export_generate();
 }
 
 function plugin_rss_export_category($params) {
-
-	plugin_rss_export_generate($params['category']);
+    plugin_rss_export_generate($params['category']);
 }
 
-function plugin_rss_export_generate($catname = '') {
-
+function plugin_rss_export_generate($catname = '')
+{
 	global $lang, $PFILTERS, $template, $config, $SUPRESS_TEMPLATE_SHOW, $SUPRESS_MAINBLOCK_SHOW, $mysql, $catz, $parse;
-	// Disable executing of `index` action (widget plugins and so on..)
+
 	actionDisable('index');
-	// Suppress templates
 	$SUPRESS_TEMPLATE_SHOW = 1;
 	$SUPRESS_MAINBLOCK_SHOW = 1;
-	// Break if category specified & doesn't exist
+
 	if (($catname != '') && (!isset($catz[$catname]))) {
 		header('HTTP/1.1 404 Not found');
 		exit;
 	}
-	// Generate header
+
 	$xcat = (($catname != '') && isset($catz[$catname])) ? $catz[$catname] : '';
-	// Generate cache file name [ we should take into account SWITCHER plugin ]
-	// Take into account: FLAG: use_hide, check if user is logged in
 	$cacheFileName = md5('rss_export' . $config['theme'] . $config['home_url'] . $config['default_lang'] . (is_array($xcat) ? $xcat['id'] : '') . pluginGetVariable('rss_export', 'use_hide') . is_array($userROW)) . '.txt';
+
 	if (pluginGetVariable('rss_export', 'cache')) {
 		$cacheData = cacheRetrieveFile($cacheFileName, pluginGetVariable('rss_export', 'cacheExpire'), 'rss_export');
 		if ($cacheData != false) {
-			// We got data from cache. Return it and stop
-			print $cacheData;
-
-			return;
+			echo $cacheData;
+			exit;
 		}
 	}
-	// Generate output
-	$output = plugin_rss_export_mk_header($xcat);
+
+	// Получаем текущий URL ленты
+$current_rss_url = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+// Генерация XML
+echo '<?xml version="1.0" encoding="utf-8"?>' . "\n";
+echo '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/">' . "\n";
+echo "<channel>\n";
+echo '<atom:link href="' . htmlspecialchars($current_rss_url, ENT_QUOTES, 'UTF-8') . '" rel="self" type="application/rss+xml" />' . "\n";
+	// Заголовок канала
+	if (pluginGetVariable('rss_export', 'feed_title_format') == 'handy') {
+		echo "<title><![CDATA[" . htmlspecialchars(pluginGetVariable('rss_export', 'feed_title_value'), ENT_QUOTES, 'UTF-8') . "]]></title>\n";
+	} else if ((pluginGetVariable('rss_export', 'feed_title_format') == 'site_title') && is_array($xcat)) {
+		echo "<title><![CDATA[" . htmlspecialchars($config['home_title'] . (is_array($xcat) ? ' :: ' . $xcat['name'] : ''), ENT_QUOTES, 'UTF-8') . "]]></title>\n";
+	} else {
+		echo "<title><![CDATA[" . htmlspecialchars($config['home_title'], ENT_QUOTES, 'UTF-8') . "]]></title>\n";
+	}
+
+	echo "<link>" . htmlspecialchars($config['home_url'], ENT_QUOTES, 'UTF-8') . "</link>\n";
+	echo "<language>ru</language>\n";
+	echo "<description><![CDATA[" . htmlspecialchars($config['description'], ENT_QUOTES, 'UTF-8') . "]]></description>\n";
+	echo "<generator><![CDATA[Plugin RSS_EXPORT (0.07) // Next Generation CMS (" . engineVersion . ")]]></generator>\n";
+
+	// Инициализация xfields
+	$xFList = array();
+	$encImages = array();
+	$enclosureIsImages = false;
+
+	if (pluginGetVariable('rss_export', 'xfEnclosureEnabled') && getPluginStatusActive('xfields')) {
+		$xFList = xf_configLoad();
+		$eFieldName = pluginGetVariable('rss_export', 'xfEnclosure');
+		if (isset($xFList['news'][$eFieldName]) && ($xFList['news'][$eFieldName]['type'] == 'images')) {
+			$enclosureIsImages = true;
+		}
+	}
+
+	// Получение новостей
 	$limit = pluginGetVariable('rss_export', 'news_count');
 	$delay = intval(pluginGetVariable('rss_export', 'delay'));
-	if ((!is_numeric($limit)) || ($limit < 0) || ($limit > 500)) {
-		$limit = 50;
-	}
+	if ((!is_numeric($limit)) || ($limit < 0) || ($limit > 500)) $limit = 50;
+
 	$old_locale = setlocale(LC_TIME, 0);
 	setlocale(LC_TIME, 'en_EN');
+
 	if (is_array($xcat)) {
 		$orderBy = ($xcat['orderby'] && in_array($xcat['orderby'], array('id desc', 'id asc', 'postdate desc', 'postdate asc', 'title desc', 'title asc'))) ? $xcat['orderby'] : 'id desc';
 		$query = "select * from " . prefix . "_news where catid regexp '\\\\b(" . $xcat['id'] . ")\\\\b' and approve=1 " . (($delay > 0) ? (" and ((postdate + " . intval($delay * 60) . ") < unix_timestamp(now())) ") : '') . "order by " . $orderBy;
 	} else {
 		$query = "select * from " . prefix . "_news where approve=1" . (($delay > 0) ? (" and ((postdate + " . intval($delay * 60) . ") < unix_timestamp(now())) ") : '') . " order by id desc";
 	}
-	// Prepare hide template
-	if ($config['blocks_for_reg'] && pluginGetVariable('rss_export', 'use_hide')) {
-		LoadPluginLang('rss_export', 'main', '', 'rexport');
-		$hide_template = @file_get_contents(root . 'plugins/rss_export/templates/hide.tpl');
-		$hide_template = str_replace('{text}', $lang['rexport_hide'], $hide_template);
-	}
-	// Fetch SQL record
+
 	$sqlData = $mysql->select($query . " limit $limit");
-	// Check if enclosure is requested and used for "images" field
-	$xFList = array();
-	$encImages = array();
-	$enclosureIsImages = false;
-	if (pluginGetVariable('rss_export', 'xfEnclosureEnabled') && getPluginStatusActive('xfields')) {
-		$xFList = xf_configLoad();
-		$eFieldName = pluginGetVariable('rss_export', 'xfEnclosure');
-		if (isset($xFList['news'][$eFieldName]) && ($xFList['news'][$eFieldName]['type'] == 'images')) {
-			$enclosureIsImages = true;
-			// Prepare list of news with attached images
-			$nAList = array();
-			foreach ($sqlData as $row) {
-				if ($row['num_images'] > 0)
-					$nAList [] = $row['id'];
-			}
+
+	// Подготовка изображений для enclosure
+	if ($enclosureIsImages) {
+		$nAList = array();
+		foreach ($sqlData as $row) {
+			if ($row['num_images'] > 0)
+				$nAList[] = $row['id'];
+		}
+		if (count($nAList)) {
 			$iQuery = "select * from " . prefix . "_images where (linked_ds = 1) and (linked_id in (" . join(",", $nAList) . ")) and (plugin = 'xfields') and (pidentity = " . db_squote($eFieldName) . ")";
 			foreach ($mysql->select($iQuery) as $row) {
 				if (!isset($encImages[$row['linked_id']]))
@@ -86,11 +112,12 @@ function plugin_rss_export_generate($catname = '') {
 			}
 		}
 	}
+
 	$truncateLen = intval(pluginGetVariable('rss_export', 'truncate'));
-	if ($truncateLen < 0)
-		$truncateLen = 0;
+	if ($truncateLen < 0) $truncateLen = 0;
+
 	foreach ($sqlData as $row) {
-		// Make standart system call in 'export' mode
+		// Обработка контента
 		$export_mode = 'export_body';
 		switch (pluginGetVariable('rss_export', 'content_show')) {
 			case '1':
@@ -100,66 +127,61 @@ function plugin_rss_export_generate($catname = '') {
 				$export_mode = 'export_full';
 				break;
 		}
+
 		$content = news_showone($row['id'], '', array('emulate' => $row, 'style' => $export_mode, 'plugin' => 'rss_export'));
+
 		if ($truncateLen > 0) {
 			$content = $parse->truncateHTML($content, $truncateLen, '...');
 		}
+
+		// Удаляем нежелательные теги
+		$content = preg_replace('/<iframe[^>]*>.*?<\/iframe>/is', '', $content);
+		$content = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $content);
+
+		// Заменяем HTML-сущности на числовые
+		$content = preg_replace_callback('/&(?!amp;|lt;|gt;|quot;|apos;)/', function ($m) {
+			return '&amp;';
+		}, $content);
+
+		// Обработка enclosure
 		$enclosure = '';
-		// Check if Enclosure `xfields` integration is activated
-		if (pluginGetVariable('rss_export', 'xfEnclosureEnabled') && (true || getPluginStatusActive('xfields'))) {
-			// Load (if needed XFIELDS plugin
+		if (pluginGetVariable('rss_export', 'xfEnclosureEnabled') && getPluginStatusActive('xfields')) {
 			include_once(root . "/plugins/xfields/xfields.php");
 			if (is_array($xfd = xf_decode($row['xfields'])) && isset($xfd[pluginGetVariable('rss_export', 'xfEnclosure')])) {
-				// Check enclosure field type
 				if ($enclosureIsImages) {
-					// images
 					if (isset($encImages[$row['id']])) {
 						$enclosure = ($encImages[$row['id']]['storage'] ? $config['attach_url'] : $config['images_url']) . '/' . $encImages[$row['id']]['folder'] . '/' . $encImages[$row['id']]['name'];
 					}
 				} else {
-					// text
 					$enclosure = $xfd[pluginGetVariable('rss_export', 'xfEnclosure')];
 				}
 			}
 		}
-		$output .= "  <item>\n";
-		$output .= "   <title><![CDATA[" . ((pluginGetVariable('rss_export', 'news_title') == 1) && GetCategories($row['catid'], true) ? GetCategories($row['catid'], true) . ' :: ' : '') . secure_html($row['title']) . "]]></title>\n";
-		$output .= "   <link><![CDATA[" . newsGenerateLink($row, false, 0, true) . "]]></link>\n";
-		$output .= "   <description><![CDATA[" . $content . "]]></description>\n";
-		// Output enclosure URL (if configured & set
-		if ($enclosure != '')
-			$output .= '   <enclosure url="' . $enclosure . '" />' . "\n";
-		$output .= "   <category>" . GetCategories($row['catid'], true) . "</category>\n";
-		$output .= "   <guid isPermaLink=\"false\">" . home . "?id=" . $row['id'] . "</guid>\n";
-		$output .= "   <pubDate>" . gmstrftime('%a, %d %b %Y %H:%M:%S GMT', $row['postdate']) . "</pubDate>\n";
-		$output .= "  </item>\n";
+
+		echo "  <item>\n";
+		echo "   <title><![CDATA[" . ((pluginGetVariable('rss_export', 'news_title') == 1) && GetCategories($row['catid'], true) ? htmlspecialchars(GetCategories($row['catid'], true) . ' :: ', ENT_QUOTES, 'UTF-8') : '') . htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8') . "]]></title>\n";
+		echo "   <link>" . htmlspecialchars(newsGenerateLink($row, false, 0, true), ENT_QUOTES, 'UTF-8') . "</link>\n";
+		echo "   <description><![CDATA[" . $content . "]]></description>\n";
+
+		if ($enclosure != '') {
+			echo '   <enclosure url="' . htmlspecialchars($enclosure, ENT_QUOTES, 'UTF-8') . '" length="0" type="' . ($enclosureIsImages ? 'image/jpeg' : 'application/octet-stream') . '" />' . "\n";
+		}
+
+		echo "   <category>" . htmlspecialchars(GetCategories($row['catid'], true), ENT_QUOTES, 'UTF-8') . "</category>\n";
+		echo "   <guid isPermaLink=\"false\">" . htmlspecialchars(home . "?id=" . $row['id'], ENT_QUOTES, 'UTF-8') . "</guid>\n";
+
+		// Проверка даты на валидность
+		$pubDate = ($row['postdate'] > time()) ? time() : $row['postdate'];
+		echo "   <pubDate>" . gmdate('r', $pubDate) . "</pubDate>\n";
+
+		echo "  </item>\n";
 	}
+
 	setlocale(LC_TIME, $old_locale);
-	$output .= " </channel>\n</rss>\n";
-	// Print output
-	print $output;
+	echo " </channel>\n</rss>\n";
+
 	if (pluginGetVariable('rss_export', 'cache')) {
-		cacheStoreFile($cacheFileName, $output, 'rss_export');
+		cacheStoreFile($cacheFileName, ob_get_contents(), 'rss_export');
 	}
-}
-
-function plugin_rss_export_mk_header($xcat) {
-
-	global $config;
-	$line = '<?xml version="1.0" encoding="utf-8"?>' . "\n";
-	$line .= ' <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/">' . "\n";
-	$line .= " <channel>\n";
-	if (pluginGetVariable('rss_export', 'feed_title_format') == 'handy') {
-		$line .= "  <title><![CDATA[" . pluginGetVariable('rss_export', 'feed_title_value') . "]]></title>\n";
-	} else if ((pluginGetVariable('rss_export', 'feed_title_format') == 'site_title') && is_array($xcat)) {
-		$line .= "  <title><![CDATA[" . $config['home_title'] . (is_array($xcat) ? ' :: ' . $xcat['name'] : '') . "]]></title>\n";
-	} else {
-		$line .= "  <title><![CDATA[" . $config['home_title'] . "]]></title>\n";
-	}
-	$line .= "  <link><![CDATA[" . $config['home_url'] . "]]></link>\n";
-	$line .= "  <language>ru</language>\n";
-	$line .= "  <description><![CDATA[" . $config['description'] . "]]></description>\n";
-	$line .= "  <generator><![CDATA[Plugin RSS_EXPORT (0.07) // Next Generation CMS (" . engineVersion . ")]]></generator>\n";
-
-	return $line;
+	exit;
 }

@@ -1,6 +1,7 @@
 <?php
 # protect against hack attempts
 if (!defined('NGCMS')) die ('HAL');
+pluginSetVariable('bb_media', 'player_name', 'videojs'); // Установка значения по умолчанию
 function plugin_bb_media_install($action) {
 
 	switch ($action) {
@@ -16,7 +17,11 @@ function plugin_bb_media_install($action) {
 				pluginSetVariable('bb_media', $k, $v);
 			}
 			pluginsSaveConfig();
-			plugin_mark_installed('bb_media');
+			if (fixdb_plugin_install('bb_media', ($action == 'autoapply') ? true : false)) {
+				plugin_mark_installed('bb_media');
+			} else {
+				return false;
+			}
 			break;
 	}
 

@@ -15,11 +15,11 @@ function plugin_bookmarks_install($action)
 	// Определение структуры таблицы для создания
 	$db_create = array(
 		array(
-			'table'  => prefix . '_bookmarks', // Имя таблицы
+			'table'  => 'bookmarks', // Имя таблицы
 			'action' => 'cmodify',             // Действие (создание/модификация)
 			'fields' => array(
 				array('action' => 'cmodify', 'name' => 'user_id', 'type' => 'int(8)', 'params' => 'DEFAULT NULL'),
-				array('action' => 'cmodify', 'name' => 'news_id', 'type' => 'int(8)', 'params' => 'DEFAULT NULL')
+				array('action' => 'cmodify', 'name' => 'product_id', 'type' => 'int(8)', 'params' => 'DEFAULT NULL')
 			)
 		)
 	);

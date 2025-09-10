@@ -1,4 +1,3 @@
-[TWIG]
 <article class="full-post">
 	<h1 class="title">{{ news.title }}</h1>
 	<span class="meta">{{ news.date }} | {% if pluginIsActive('uprofile') %}
@@ -15,7 +14,7 @@
 		{% if pluginIsActive('tags') %}{% if (p.tags.flags.haveTags) %}
 			<div class="post-full-tags">{{ lang.tags }}: {{ tags }}</div>{% endif %}{% endif %}
 		<div class="post-full-meta">{{ lang.views }}
-			: {{ news.views }} {% if pluginIsActive('comments') %}| {{ lang.com }}: {comments-num}{% endif %}</div>
+			: {{ news.views }} {% if pluginIsActive('comments') %}| {{ lang.com }}: {{ comments_num }}{% endif %}</div>
 		{% if pluginIsActive('rating') %}
 			<div class="post-rating">{{ lang.rating }}: <span class="post-rating-inner">{{ plugin_rating }}</span>
 			</div>{% endif %}
@@ -23,7 +22,7 @@
 </article>
 {% if pluginIsActive('similar') %}{{ plugin_similar_tags }}{% endif %}
 {% if pluginIsActive('comments') %}
-	<div class="title">{{ lang.comments }} ({comments-num})</div>
-	{{ plugin_comments }}
+<div class="title">{{ lang.comments }}:	({{ comments_num }}	опубликовано {% if comments_pending > 0 %},	{{ comments_pending }}на модерации	{% endif %})
+</div>
+	{{ comments }}
 {% endif %}
-[/TWIG]
