@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 //
-// Copyright (C) 2006-2013 Next Generation CMS (http://ngcms.ru/)
+// Copyright (C) 2006-2013 Next Generation CMS (http://ngcms.org/)
 // Name: news.php
 // Description: News managment
 // Author: Vitaly Ponomarev, Alexey Zinchenko
@@ -59,7 +59,8 @@ function editNewsForm()
     // Get news id
     $id = intval($_REQUEST['id']);
     // Try to find news that we're trying to edit
-    if (!is_array($row = $mysql->record('select * from ' . prefix . '_news where id = ' . db_squote($id)))) {
+    $row = $mysql->record('select * from ' . prefix . '_news where id = ' . db_squote($id));
+    if (!is_array($row)) {
         msg(['type' => 'error', 'text' => $lang['msge_not_found']]);
         return;
     }
@@ -287,6 +288,8 @@ function makeSortList($selected)
         '<option value="id"' . ($selected == 'id' ? ' selected' : '') . '>' . $lang['sort_postid'] . '</option>' .
         '<option value="postdate_desc"' . ($selected == 'postdate_desc' ? ' selected' : '') . '>' . $lang['sort_postdate_desc'] . '</option>' .
         '<option value="postdate"' . ($selected == 'postdate' ? ' selected' : '') . '>' . $lang['sort_postdate'] . '</option>' .
+        '<option value="editdate_desc"' . ($selected == 'editdate_desc' ? ' selected' : '') . '>' . 'По редактированию ↓' . '</option>' .
+        '<option value="editdate"' . ($selected == 'editdate' ? ' selected' : '') . '>' . 'По редактированию ↑' . '</option>' .
         '<option value="title_desc"' . ($selected == 'title_desc' ? ' selected' : '') . '>' . $lang['sort_title_desc'] . '</option>' .
         '<option value="title"' . ($selected == 'title' ? ' selected' : '') . '>' . $lang['sort_title'] . '</option>';
 }
@@ -357,6 +360,12 @@ function listNewsForm()
             break;
         case 'postdate_desc':
             $fSort = 'postdate desc';
+            break;
+        case 'editdate':
+            $fSort = 'editdate';
+            break;
+        case 'editdate_desc':
+            $fSort = 'editdate desc';
             break;
         case 'title':
             $fSort = 'title';

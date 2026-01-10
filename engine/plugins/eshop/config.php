@@ -7,8 +7,8 @@ if (!defined('NGCMS')) {
 pluginsLoadConfig();
 LoadPluginLang('eshop', 'config', '', '', '#');
 
-include_once(__DIR__.'/cache.php');
-include_once(__DIR__.'/functions.php');
+include_once(__DIR__ . '/cache.php');
+include_once(__DIR__ . '/functions.php');
 
 switch ($_REQUEST['action']) {
 
@@ -182,11 +182,11 @@ function list_product()
 
     $conditions = array();
     if ($fName) {
-        array_push($conditions, "p.name LIKE ".db_squote("%".$fName."%"));
+        array_push($conditions, "p.name LIKE " . db_squote("%" . $fName . "%"));
     }
 
     if ($fStatus == '0' || $fStatus == '1') {
-        array_push($conditions, "p.active = ".db_squote($fStatus));
+        array_push($conditions, "p.active = " . db_squote($fStatus));
     }
 
     if ($fCategory) {
@@ -194,25 +194,25 @@ function list_product()
         $catz_filter = getChildIdsArray($cats, $fCategory, 0);
         $catz_filter[] = $fCategory;
         $catz_filter_comma_separated = implode(",", $catz_filter);
-        array_push($conditions, "pc.category_id IN (".$catz_filter_comma_separated.") ");
+        array_push($conditions, "pc.category_id IN (" . $catz_filter_comma_separated . ") ");
     }
 
     if ($fId) {
-        array_push($conditions, "p.id = ".db_squote($fId));
+        array_push($conditions, "p.id = " . db_squote($fId));
     }
 
     if ($fCode) {
-        array_push($conditions, "p.code = ".db_squote($fCode));
+        array_push($conditions, "p.code = " . db_squote($fCode));
     }
 
     //$fSort = " GROUP BY p.id ORDER BY p.id DESC";
-	$fSort = " ORDER BY p.id DESC";
-    $sqlQPart = "FROM ".prefix."_eshop_products p LEFT JOIN ".prefix."_eshop_products_categories pc ON p.id = pc.product_id LEFT JOIN ".prefix."_eshop_categories c ON pc.category_id = c.id ".(count(
-            $conditions
-        ) ? "WHERE ".implode(" AND ", $conditions) : '').$fSort;
-    $sqlQ = "SELECT p.id AS id, p.url AS url, p.code AS code, p.name AS name, p.active AS active, p.featured AS featured, p.position AS position, c.name AS category ".$sqlQPart;
+    $fSort = " ORDER BY p.id DESC";
+    $sqlQPart = "FROM " . prefix . "_eshop_products p LEFT JOIN " . prefix . "_eshop_products_categories pc ON p.id = pc.product_id LEFT JOIN " . prefix . "_eshop_categories c ON pc.category_id = c.id " . (count(
+        $conditions
+    ) ? "WHERE " . implode(" AND ", $conditions) : '') . $fSort;
+    $sqlQ = "SELECT p.id AS id, p.url AS url, p.code AS code, p.name AS name, p.active AS active, p.featured AS featured, p.position AS position, c.name AS category " . $sqlQPart;
 
-    $sqlQCount = "SELECT COUNT(*) AS CNT FROM (".$sqlQ.") AS T ";
+    $sqlQCount = "SELECT COUNT(*) AS CNT FROM (" . $sqlQ . ") AS T ";
 
     //$sqlQCount = "SELECT COUNT(p.id) FROM ng_eshop_products p ORDER BY p.id DESC";
 
@@ -230,11 +230,11 @@ function list_product()
     //var_dump($sqlQ);
     //var_dump($sqlQ.' LIMIT '.$start_from.', '.$news_per_page);
 
-    foreach ($mysql->select($sqlQ.' LIMIT '.$start_from.', '.$news_per_page) as $row) {
+    foreach ($mysql->select($sqlQ . ' LIMIT ' . $start_from . ', ' . $news_per_page) as $row) {
 
-			$view_link = checkLinkAvailable('eshop', 'show')?
-				generateLink('eshop', 'show', array('alt' => $row['url'])):
-				generateLink('core', 'plugin', array('plugin' => 'eshop', 'handler' => 'show'), array('alt' => $row['url']));
+        $view_link = checkLinkAvailable('eshop', 'show') ?
+            generateLink('eshop', 'show', array('alt' => $row['url'])) :
+            generateLink('core', 'plugin', array('plugin' => 'eshop', 'handler' => 'show'), array('alt' => $row['url']));
 
         $tEntry[$row['id']] = array(
             'id' => $row['id'],
@@ -257,9 +257,9 @@ function list_product()
             'date' => $row['date'],
             'editdate' => $row['editdate'],
 
-            'edit_link' => "?mod=extra-config&plugin=eshop&action=edit_product&id=".$row['id']."",
-            'view_link' => checkLinkAvailable('eshop', 'show')?
-                generateLink('eshop', 'show', array('alt' => $row['url'])):
+            'edit_link' => "?mod=extra-config&plugin=eshop&action=edit_product&id=" . $row['id'] . "",
+            'view_link' => checkLinkAvailable('eshop', 'show') ?
+                generateLink('eshop', 'show', array('alt' => $row['url'])) :
                 generateLink('core', 'plugin', array('plugin' => 'eshop', 'handler' => 'show'), array('alt' => $row['url'])),
         );
     }
@@ -270,26 +270,25 @@ function list_product()
 
         $entries_string_ids = implode(',', $entries_array_ids);
 
-        foreach ($mysql->select('SELECT * FROM '.prefix.'_eshop_images i WHERE i.product_id IN ('.$entries_string_ids.') ORDER BY i.position, i.id') as $irow) {
+        foreach ($mysql->select('SELECT * FROM ' . prefix . '_eshop_images i WHERE i.product_id IN (' . $entries_string_ids . ') ORDER BY i.position, i.id') as $irow) {
             $tEntry[$irow['product_id']]['images'][] = $irow;
         }
 
-        foreach ($mysql->select('SELECT * FROM '.prefix.'_eshop_variants v WHERE v.product_id IN ('.$entries_string_ids.') ORDER BY v.position, v.id') as $vrow) {
+        foreach ($mysql->select('SELECT * FROM ' . prefix . '_eshop_variants v WHERE v.product_id IN (' . $entries_string_ids . ') ORDER BY v.position, v.id') as $vrow) {
             $tEntry[$vrow['product_id']]['variants'][] = $vrow;
         }
-
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_product'].'config/'.'list_product.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_product'] . 'config/' . 'list_product.tpl');
 
     $tVars = array(
-        'php_self' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'php_self' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'filter_cats' => getTree($cats, $fCategory, 0),
         'pagesss' => generateAdminPagelist(
             array(
                 'current' => $pageNo,
                 'count' => $countPages,
-                'url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop'.($news_per_page ? '&rpp='.$news_per_page : '').($fName ? '&fname='.$fName : '').($fStatus ? '&fstatus='.$fStatus : '').($fCategory ? '&fcategory='.$fCategory : '').'&page=%page%',
+                'url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop' . ($news_per_page ? '&rpp=' . $news_per_page : '') . ($fName ? '&fname=' . $fName : '') . ($fStatus ? '&fstatus=' . $fStatus : '') . ($fCategory ? '&fcategory=' . $fCategory : '') . '&page=%page%',
             )
         ),
         'rpp' => $news_per_page,
@@ -301,12 +300,12 @@ function list_product()
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -327,20 +326,20 @@ function add_product()
         if (empty($SQL['name'])) {
             $error_text[] = 'Название продукта не задано';
         }
-		
+
         $SQL['url'] = input_filter_com(convert($_REQUEST['url']));
         if (empty($SQL['url'])) {
             $SQL['url'] = strtolower($parse->translit($SQL['name'], 1, 1));
         }
 
-/*         if ($SQL['url']) {
+        /*         if ($SQL['url']) {
             if (is_array($mysql->record("SELECT id FROM ".prefix."_eshop_products WHERE url = ".db_squote($SQL['url'])." LIMIT 1"))) {
                 $error_text[] = 'Такой altname уже существует.';
             }
         } */
 
         $SQL['code'] = secure_html(trim($_REQUEST['code']));
-		
+
         $SQL['meta_title'] = secure_html(trim($_REQUEST['meta_title']));
         if (empty($SQL['meta_title'])) {
             $SQL['meta_title'] = $SQL['name'];
@@ -360,15 +359,15 @@ function add_product()
 
         $SQL['date'] = time() + ($config['date_adjust'] * 60);
         $SQL['editdate'] = $SQL['date'];
-		
-		//Дополнительные поля
+
+        //Дополнительные поля
         if (!empty($_REQUEST['data']['features'])) {
             $features = $_REQUEST['data']['features'];
         } else {
             $features = null;
         }
 
-		//Изображения
+        //Изображения
         $images = $_REQUEST['data']['images'];
 
         if ($_REQUEST['linked-products'] != "") {
@@ -380,24 +379,24 @@ function add_product()
         if (empty($error_text)) {
             $vnames = [];
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('INSERT INTO '.prefix.'_eshop_products SET '.implode(', ', $vnames));
+            $mysql->query('INSERT INTO ' . prefix . '_eshop_products SET ' . implode(', ', $vnames));
 
-			$qid = lastid('eshop_products');
+            $qid = lastid('eshop_products');
 
             if ($images != null) {
 
-                makeUploadsDirs('/eshop/products/'.$qid.'/');
+                makeUploadsDirs('/eshop/products/' . $qid . '/');
 
                 foreach ($images as $inx_img => $img) {
                     $timestamp = time();
-                    $iname = $timestamp."-".$img;
+                    $iname = $timestamp . "-" . $img;
 
                     $productsTempPath = '/eshop/products/';
                     moveFromTemp($qid, $productsTempPath, $img, $iname);
 
-                    $mysql->query("INSERT INTO ".prefix."_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$inx_img')");
+                    $mysql->query("INSERT INTO " . prefix . "_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$inx_img')");
                 }
             }
 
@@ -405,7 +404,7 @@ function add_product()
             if ($features != null) {
                 foreach ($features as $f_key => $f_value) {
                     if ($f_value != '') {
-                        $mysql->query("INSERT INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
+                        $mysql->query("INSERT INTO " . prefix . "_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
                     }
                 }
             }
@@ -413,13 +412,13 @@ function add_product()
             $bidirect_linked_products = pluginGetVariable('eshop', 'bidirect_linked_products');
 
             if ($linked_products != null) {
-                $mysql->query("DELETE FROM ".prefix."_eshop_related_products WHERE product_id='$qid'");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_related_products WHERE product_id='$qid'");
                 foreach ($linked_products as $p_key => $p_value) {
-                    $mysql->query("INSERT INTO ".prefix."_eshop_related_products (`product_id`, `related_id`, `position`) VALUES ('$qid','$p_value','0')");
+                    $mysql->query("INSERT INTO " . prefix . "_eshop_related_products (`product_id`, `related_id`, `position`) VALUES ('$qid','$p_value','0')");
                     if ($bidirect_linked_products == "1") {
-                        $lprd = $mysql->record("SELECT * FROM ".prefix."_eshop_related_products WHERE product_id = ".db_squote($p_value)." AND related_id = ".db_squote($qid)." ");
+                        $lprd = $mysql->record("SELECT * FROM " . prefix . "_eshop_related_products WHERE product_id = " . db_squote($p_value) . " AND related_id = " . db_squote($qid) . " ");
                         if (empty($lprd)) {
-                            $mysql->query("INSERT INTO ".prefix."_eshop_related_products (`product_id`, `related_id`, `position`) VALUES ('$p_value','$qid','0')");
+                            $mysql->query("INSERT INTO " . prefix . "_eshop_related_products (`product_id`, `related_id`, `position`) VALUES ('$p_value','$qid','0')");
                         }
                     }
                 }
@@ -428,36 +427,35 @@ function add_product()
             $category_id = (int)$_REQUEST['parent'];
 
             if ($category_id != 0) {
-                $mysql->query("INSERT INTO ".prefix."_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
+                $mysql->query("INSERT INTO " . prefix . "_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
             }
-			
+
             $optlist = array();
             if (isset($_REQUEST['so_data']) && is_array($_REQUEST['so_data'])) {
-                $mysql->query("DELETE FROM ".prefix."_eshop_variants WHERE product_id='$qid'");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_variants WHERE product_id='$qid'");
                 foreach ($_REQUEST['so_data'] as $k => $v) {
                     if (is_array($v)) {
-						$v[2] = $v[2] ? $v[2] : '0.00';
-						$v[3] = $v[3] ? $v[3] : '0.00';
-						$v[4] = $v[4] ? $v[4] : 'NULL';
-                        $mysql->query("INSERT INTO ".prefix."_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `amount`, `stock`) VALUES ('$qid', '$v[0]', '$v[1]', '$v[2]', '$v[3]', $v[4], '$v[5]')");
+                        $v[2] = $v[2] ? $v[2] : '0.00';
+                        $v[3] = $v[3] ? $v[3] : '0.00';
+                        $v[4] = $v[4] ? $v[4] : 'NULL';
+                        $mysql->query("INSERT INTO " . prefix . "_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `amount`, `stock`) VALUES ('$qid', '$v[0]', '$v[1]', '$v[2]', '$v[3]', $v[4], '$v[5]')");
                     }
                 }
             }
 
             generate_catz_cache(true);
-			msg(array('type' => 'info', 'info' => 'Новый товар успешно добавлен'));
-			redirect_eshop('?mod=extra-config&plugin=eshop');
+            msg(array('type' => 'info', 'info' => 'Новый товар успешно добавлен'));
+            redirect_eshop('?mod=extra-config&plugin=eshop');
         }
-
     }
 
-	if(!empty($error_text)) {
-		foreach($error_text as $error) {
-			$error_input .= msg(array("type" => "error", "text" => $error));
-		}
-	} else {
-		$error_input ='';
-	}
+    if (!empty($error_text)) {
+        foreach ($error_text as $error) {
+            $error_input .= msg(array("type" => "error", "text" => $error));
+        }
+    } else {
+        $error_input = '';
+    }
 
     foreach ($SQL as $k => $v) {
         $tEntry[$k] = $v;
@@ -465,7 +463,7 @@ function add_product()
 
     $cats = getCats2();
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_features ORDER BY position, id") as $frow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_features ORDER BY position, id") as $frow) {
         $frow['value'] = '';
         $frow['foptions'] = json_decode($frow['foptions'], true);
         foreach ($frow['foptions'] as $key => $value) {
@@ -474,7 +472,7 @@ function add_product()
         $features_array[] = $frow;
     }
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_categories_features") as $cfrow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_categories_features") as $cfrow) {
         $cat_features_array[$cfrow['category_id']][] = $cfrow['feature_id'];
     }
 
@@ -482,21 +480,21 @@ function add_product()
     $tEntry['features'] = $features_array;
     $tEntry['cat_features'] = json_encode($cat_features_array);
     $tEntry['error'] = $error_input;
-	$tEntry['id'] = lastid('eshop_products');
+    $tEntry['id'] = lastid('eshop_products');
     $tEntry['mode'] = "add";
 
-    $xt = $twig->loadTemplate($tpath['config/add_product'].'config/'.'add_product.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_product'] . 'config/' . 'add_product.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -512,16 +510,16 @@ function edit_product()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_product'), 'eshop', 1);
 
     $qid = intval($_REQUEST['id']);
-    $row = $mysql->record('SELECT * FROM '.prefix.'_eshop_products LEFT JOIN '.prefix.'_eshop_products_categories ON '.prefix.'_eshop_products.id='.prefix.'_eshop_products_categories.product_id WHERE id = '.db_squote($qid).' LIMIT 1');
+    $row = $mysql->record('SELECT * FROM ' . prefix . '_eshop_products LEFT JOIN ' . prefix . '_eshop_products_categories ON ' . prefix . '_eshop_products.id=' . prefix . '_eshop_products_categories.product_id WHERE id = ' . db_squote($qid) . ' LIMIT 1');
 
     $cats = getCats2();
 
     $options_array = array();
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_options LEFT JOIN ".prefix."_eshop_features ON ".prefix."_eshop_features.id=".prefix."_eshop_options.feature_id WHERE ".prefix."_eshop_options.product_id = '$qid' ORDER BY position, id") as $orow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_options LEFT JOIN " . prefix . "_eshop_features ON " . prefix . "_eshop_features.id=" . prefix . "_eshop_options.feature_id WHERE " . prefix . "_eshop_options.product_id = '$qid' ORDER BY position, id") as $orow) {
         $options_array[$orow['id']] = $orow['value'];
     }
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_features ORDER BY position, id") as $frow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_features ORDER BY position, id") as $frow) {
         $frow['value'] = $options_array[$frow['id']];
         $frow['foptions'] = json_decode($frow['foptions'], true);
         foreach ($frow['foptions'] as $key => $value) {
@@ -531,14 +529,14 @@ function edit_product()
     }
 
     $positions_img = array();
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_images WHERE product_id = '$qid' ORDER BY position, id") as $irow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_images WHERE product_id = '$qid' ORDER BY position, id") as $irow) {
         $images_array[] =
             array(
                 'id' => $irow['id'],
                 'filepath' => $irow['filepath'],
                 'product_id' => $irow['product_id'],
                 'position' => $irow['position'],
-                'del_link' => home.'/engine/admin.php?mod=extra-config&plugin=eshop&action=edit_product&id='.$qid.'&delimg='.$irow['id'].'&filepath='.$irow['filepath'].'',
+                'del_link' => home . '/engine/admin.php?mod=extra-config&plugin=eshop&action=edit_product&id=' . $qid . '&delimg=' . $irow['id'] . '&filepath=' . $irow['filepath'] . '',
             );
         $positions_img[] = $irow['position'];
     }
@@ -549,7 +547,7 @@ function edit_product()
         $max_img_pos = 0;
     }
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_related_products rp LEFT JOIN ".prefix."_eshop_products p ON p.id=rp.related_id WHERE rp.product_id = '$qid' ORDER BY rp.position") as $rrow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_related_products rp LEFT JOIN " . prefix . "_eshop_products p ON p.id=rp.related_id WHERE rp.product_id = '$qid' ORDER BY rp.position") as $rrow) {
         $related_array[] =
             array(
                 'name' => $rrow['name'],
@@ -559,8 +557,8 @@ function edit_product()
             );
     }
 
-	$price_array = [];
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_variants WHERE product_id = '$qid' ORDER BY position, id") as $vrow) {
+    $price_array = [];
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_variants WHERE product_id = '$qid' ORDER BY position, id") as $vrow) {
         $price_array[] = $vrow;
     }
 
@@ -595,19 +593,19 @@ function edit_product()
             array_push(
                 $sOpts,
                 '<tr>
-                <td><input type="text" size="12" name="so_data['.($fNum).'][0]" value="'.htmlspecialchars($v['sku'],ENT_COMPAT | ENT_HTML401,'cp1251').'"/></td>
-                <td><input type="text" size="45" name="so_data['.($fNum).'][1]" value="'.htmlspecialchars($v['name'],ENT_COMPAT | ENT_HTML401,'cp1251').'"/></td>
-                <td><input type="text" size="12" name="so_data['.($fNum).'][2]" value="'.$v['price'].'"/></td>
-                <td><input type="text" size="12" name="so_data['.($fNum).'][3]" value="'.$v['compare_price'].'"/></td>
-                <td><input type="text" size="12" name="so_data['.($fNum).'][4]" value="'.htmlspecialchars($v['amount'],ENT_COMPAT | ENT_HTML401,'cp1251').'"/></td>
+                <td><input type="text" size="12" name="so_data[' . ($fNum) . '][0]" value="' . htmlspecialchars($v['sku'], ENT_COMPAT | ENT_HTML401, 'cp1251') . '"/></td>
+                <td><input type="text" size="45" name="so_data[' . ($fNum) . '][1]" value="' . htmlspecialchars($v['name'], ENT_COMPAT | ENT_HTML401, 'cp1251') . '"/></td>
+                <td><input type="text" size="12" name="so_data[' . ($fNum) . '][2]" value="' . $v['price'] . '"/></td>
+                <td><input type="text" size="12" name="so_data[' . ($fNum) . '][3]" value="' . $v['compare_price'] . '"/></td>
+                <td><input type="text" size="12" name="so_data[' . ($fNum) . '][4]" value="' . htmlspecialchars($v['amount'], ENT_COMPAT | ENT_HTML401, 'cp1251') . '"/></td>
                 <td>
-                    <select name="so_data['.($fNum).'][5]" style="width: 100px;">
-                        <option '.$check_stock_array[5].' value="5">Есть</option>
-                        <option '.$check_stock_array[0].' value="0">Нет</option>
-                        <option '.$check_stock_array[1].' value="1">На заказ</option>
+                    <select name="so_data[' . ($fNum) . '][5]" style="width: 100px;">
+                        <option ' . $check_stock_array[5] . ' value="5">Есть</option>
+                        <option ' . $check_stock_array[0] . ' value="0">Нет</option>
+                        <option ' . $check_stock_array[1] . ' value="1">На заказ</option>
                     </select>
                 </td>
-                <td><a href="#" onclick="return false;"><img src="'.admin_url.'/plugins/eshop/tpl/img/delete.png" alt="DEL" width="12" height="12" /></a></td>
+                <td><a href="#" onclick="return false;"><img src="' . admin_url . '/plugins/eshop/tpl/img/delete.png" alt="DEL" width="12" height="12" /></a></td>
                 </tr>'
             );
             $fNum++;
@@ -629,7 +627,7 @@ function edit_product()
                     <option value="1">На заказ</option>
                 </select>
             </td>
-            <td><a href="#" onclick="return false;"><img src="'.admin_url.'/plugins/eshop/tpl/img/delete.png" alt="DEL" width="12" height="12" /></a></td>
+            <td><a href="#" onclick="return false;"><img src="' . admin_url . '/plugins/eshop/tpl/img/delete.png" alt="DEL" width="12" height="12" /></a></td>
         </tr>'
         );
     }
@@ -646,15 +644,15 @@ function edit_product()
         $SQL['code'] = secure_html(trim($_REQUEST['code']));
 
         $SQL['url'] = secure_html(trim($_REQUEST['url']));
-		if (empty($SQL['url'])) {
-			$SQL['url'] = strtolower($parse->translit($SQL['name'], 1, 1));
-		}
+        if (empty($SQL['url'])) {
+            $SQL['url'] = strtolower($parse->translit($SQL['name'], 1, 1));
+        }
         if (empty($SQL['url'])) {
             $SQL['url'] = strtolower($parse->translit($SQL['name'], 1, 1));
         }
 
         if ($SQL["url"]) {
-            if (is_array($mysql->record("SELECT id FROM ".prefix."_eshop_products WHERE url = ".db_squote($SQL["url"])." AND id <> ".$row['id']." LIMIT 1"))) {
+            if (is_array($mysql->record("SELECT id FROM " . prefix . "_eshop_products WHERE url = " . db_squote($SQL["url"]) . " AND id <> " . $row['id'] . " LIMIT 1"))) {
                 $error_text[] = 'Такой altname уже существует.';
             }
         }
@@ -685,32 +683,32 @@ function edit_product()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('UPDATE '.prefix.'_eshop_products SET '.implode(', ', $vnames).' WHERE id = \''.(int)$qid.'\'  ');
+            $mysql->query('UPDATE ' . prefix . '_eshop_products SET ' . implode(', ', $vnames) . ' WHERE id = \'' . (int)$qid . '\'  ');
 
             if ($images != null) {
 
-                makeUploadsDirs('/eshop/products/'.$qid.'/');
+                makeUploadsDirs('/eshop/products/' . $qid . '/');
 
                 foreach ($images as $inx_img => $img) {
                     $timestamp = time();
-                    $iname = $timestamp."-".$img;
+                    $iname = $timestamp . "-" . $img;
 
                     $productsTempPath = '/eshop/products/';
                     moveFromTemp($qid, $productsTempPath, $img, $iname);
 
                     $pos = $max_img_pos + $inx_img;
 
-                    $mysql->query("INSERT INTO ".prefix."_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$pos')");
+                    $mysql->query("INSERT INTO " . prefix . "_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$pos')");
                 }
             }
 
             if ($features != null) {
-                $mysql->query("DELETE FROM ".prefix."_eshop_options WHERE product_id='$qid'");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_options WHERE product_id='$qid'");
                 foreach ($features as $f_key => $f_value) {
                     if ($f_value != '') {
-                        $mysql->query("REPLACE INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value') ");
+                        $mysql->query("REPLACE INTO " . prefix . "_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value') ");
                     }
                 }
             }
@@ -718,47 +716,46 @@ function edit_product()
             $bidirect_linked_products = pluginGetVariable('eshop', 'bidirect_linked_products');
 
             if ($linked_products != null) {
-                $mysql->query("DELETE FROM ".prefix."_eshop_related_products WHERE product_id='$qid'");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_related_products WHERE product_id='$qid'");
                 foreach ($linked_products as $p_key => $p_value) {
-                    $mysql->query("INSERT INTO ".prefix."_eshop_related_products (`product_id`, `related_id`, `position`) VALUES ('$qid','$p_value','0')");
+                    $mysql->query("INSERT INTO " . prefix . "_eshop_related_products (`product_id`, `related_id`, `position`) VALUES ('$qid','$p_value','0')");
                     if ($bidirect_linked_products == "1") {
-                        $lprd = $mysql->record("SELECT * FROM ".prefix."_eshop_related_products WHERE product_id = ".db_squote($p_value)." AND related_id = ".db_squote($qid)." ");
+                        $lprd = $mysql->record("SELECT * FROM " . prefix . "_eshop_related_products WHERE product_id = " . db_squote($p_value) . " AND related_id = " . db_squote($qid) . " ");
                         if (empty($lprd)) {
-                            $mysql->query("INSERT INTO ".prefix."_eshop_related_products (`product_id`, `related_id`, `position`) VALUES ('$p_value','$qid','0')");
+                            $mysql->query("INSERT INTO " . prefix . "_eshop_related_products (`product_id`, `related_id`, `position`) VALUES ('$p_value','$qid','0')");
                         }
                     }
                 }
             } else {
-                $mysql->query("DELETE FROM ".prefix."_eshop_related_products WHERE product_id='$qid'");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_related_products WHERE product_id='$qid'");
             }
 
             $category_id = (int)$_REQUEST['parent'];
 
             if ($category_id != 0) {
-                $mysql->query("DELETE FROM ".prefix."_eshop_products_categories WHERE product_id='$qid'");
-                $mysql->query("INSERT INTO ".prefix."_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_products_categories WHERE product_id='$qid'");
+                $mysql->query("INSERT INTO " . prefix . "_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
             } else {
-                $mysql->query("DELETE FROM ".prefix."_eshop_products_categories WHERE product_id='$qid'");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_products_categories WHERE product_id='$qid'");
             }
 
             if (isset($_REQUEST['so_data']) && is_array($_REQUEST['so_data'])) {
-                $mysql->query("DELETE FROM ".prefix."_eshop_variants WHERE product_id='$qid'");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_variants WHERE product_id='$qid'");
                 foreach ($_REQUEST['so_data'] as $k => $v) {
                     if (is_array($v)) {
-						$v[2] = $v[2] ? $v[2] : '0.00';
-						$v[3] = $v[3] ? $v[3] : '0.00';
-						$v[4] = $v[4] ? $v[4] : 'NULL';
-                        $mysql->query("INSERT INTO ".prefix."_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `amount`, `stock`) VALUES ('$qid', '$v[0]', '$v[1]', '$v[2]', '$v[3]', $v[4], '$v[5]')");
+                        $v[2] = $v[2] ? $v[2] : '0.00';
+                        $v[3] = $v[3] ? $v[3] : '0.00';
+                        $v[4] = $v[4] ? $v[4] : 'NULL';
+                        $mysql->query("INSERT INTO " . prefix . "_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `amount`, `stock`) VALUES ('$qid', '$v[0]', '$v[1]', '$v[2]', '$v[3]', $v[4], '$v[5]')");
                     }
                 }
             }
 
             generate_catz_cache(true);
-			msg(array('type' => 'info', 'info' => 'Товар успешно отредактирован'));
-			//return list_product();
-			redirect_eshop('?mod=extra-config&plugin=eshop');
+            msg(array('type' => 'info', 'info' => 'Товар успешно отредактирован'));
+            //return list_product();
+            redirect_eshop('?mod=extra-config&plugin=eshop');
         }
-
     }
 
     $error_input = '';
@@ -775,20 +772,20 @@ function edit_product()
     if (isset($_REQUEST['delimg']) && isset($_REQUEST['filepath'])) {
         $imgID = (int)$_REQUEST['delimg'];
         $imgPath = secure_html(trim($_REQUEST['filepath']));
-        $mysql->query("DELETE FROM ".prefix."_eshop_images WHERE id = ".$imgID);
+        $mysql->query("DELETE FROM " . prefix . "_eshop_images WHERE id = " . $imgID);
         delete_product_image($imgPath, $qid);
 
         $r_pos = 0;
-        foreach ($mysql->select('SELECT * FROM '.prefix.'_eshop_images WHERE product_id = '.$row['id'].' ORDER BY position, id ') as $img_row) {
-            $mysql->query("update ".prefix."_eshop_images set position = ".db_squote($r_pos)." where (id = ".db_squote($img_row['id']).") ");
+        foreach ($mysql->select('SELECT * FROM ' . prefix . '_eshop_images WHERE product_id = ' . $row['id'] . ' ORDER BY position, id ') as $img_row) {
+            $mysql->query("update " . prefix . "_eshop_images set position = " . db_squote($r_pos) . " where (id = " . db_squote($img_row['id']) . ") ");
             $r_pos += 1;
         }
-		msg(array('type' => 'info', 'info' => "Изображение удалено"));
-		//return print_commit_complete('eshop');
-        redirect_eshop('?mod=extra-config&plugin=eshop&action=edit_product&id='.$qid.'');
+        msg(array('type' => 'info', 'info' => "Изображение удалено"));
+        //return print_commit_complete('eshop');
+        redirect_eshop('?mod=extra-config&plugin=eshop&action=edit_product&id=' . $qid . '');
     }
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_categories_features") as $cfrow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_categories_features") as $cfrow) {
         $cat_features_array[$cfrow['category_id']][] = iconv("windows-1251", "utf-8", $cfrow['feature_id']);
     }
 
@@ -805,25 +802,25 @@ function edit_product()
     $view_link = checkLinkAvailable('eshop', 'show') ?
         generateLink('eshop', 'show', array('alt' => $row['url'])) :
         generateLink('core', 'plugin', array('plugin' => 'eshop', 'handler' => 'show'), array('alt' => $row['url']));
-    $prd_link = home.$view_link;
+    $prd_link = home . $view_link;
 
 
-    $xt = $twig->loadTemplate($tpath['config/add_product'].'config/'.'add_product.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_product'] . 'config/' . 'add_product.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
-        'current_title' => 'Продукция: Редактирование продукта (Опубликован &#8594; <small><a href="'.$prd_link.'" target="_blank">'.$prd_link.'</a></small>)',
+        'current_title' => 'Продукция: Редактирование продукта (Опубликован &#8594; <small><a href="' . $prd_link . '" target="_blank">' . $prd_link . '</a></small>)',
     );
 
     print $xg->render($tVars);
@@ -832,108 +829,107 @@ function edit_product()
 function modify_product()
 {
     global $mysql;
-	
-	$selected_product = array();
+
+    $selected_product = array();
 
     $selected_product = $_REQUEST['selected_product'];
-	
+
     if (!$selected_product)
         return msg(array("type" => "error", "text" => "Не выбран ID!"));
-	
+
     $subaction = $_REQUEST['subaction'];
 
     $id = implode(',', $selected_product);
 
     switch ($subaction) {
-        case 'mass_delete'           :
+        case 'mass_delete':
             $del = true;
             break;
-        case 'mass_active_add'       :
+        case 'mass_active_add':
             $active_add = true;
             break;
-        case 'mass_active_remove'    :
+        case 'mass_active_remove':
             $active_remove = true;
             break;
-        case 'mass_featured_add'     :
+        case 'mass_featured_add':
             $featured_add = true;
             break;
-        case 'mass_featured_remove'  :
+        case 'mass_featured_remove':
             $featured_remove = true;
             break;
-        case 'mass_stocked_add'      :
+        case 'mass_stocked_add':
             $stocked_add = true;
             break;
-        case 'mass_stocked_remove'   :
+        case 'mass_stocked_remove':
             $stocked_remove = true;
             break;
     }
 
     if (isset($del)) {
-        $mysql->query("delete from ".prefix."_eshop_products where id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_options where product_id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_products_likes where product_id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_products_comments where product_id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_related_products where product_id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_related_products where related_id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_variants where product_id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_ebasket where linked_id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_compare where linked_fld in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_products where id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_options where product_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_products_likes where product_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_products_comments where product_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_related_products where product_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_related_products where related_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_variants where product_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_ebasket where linked_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_compare where linked_fld in ({$id})");
 
-        foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_images WHERE product_id in ({$id})") as $irow) {
+        foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_images WHERE product_id in ({$id})") as $irow) {
             delete_product_image($irow['filepath'], $irow['product_id']);
         }
-        $mysql->query("delete from ".prefix."_eshop_images where product_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_images where product_id in ({$id})");
 
-        $mysql->query("DELETE FROM ".prefix."_eshop_products_categories WHERE product_id in ({$id})");
+        $mysql->query("DELETE FROM " . prefix . "_eshop_products_categories WHERE product_id in ({$id})");
 
         //redirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} удалены!"));
     }
 
     if (isset($active_add)) {
-        $mysql->query("UPDATE ".prefix."_eshop_products SET active = 1 WHERE id IN ({$id})");
+        $mysql->query("UPDATE " . prefix . "_eshop_products SET active = 1 WHERE id IN ({$id})");
 
         //redirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} обновлены!"));
     }
 
     if (isset($active_remove)) {
-        $mysql->query("UPDATE ".prefix."_eshop_products SET active = 0 WHERE id IN ({$id})");
+        $mysql->query("UPDATE " . prefix . "_eshop_products SET active = 0 WHERE id IN ({$id})");
 
         //redirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} обновлены!"));
     }
 
     if (isset($featured_add)) {
-        $mysql->query("UPDATE ".prefix."_eshop_products SET featured = 1 WHERE id IN ({$id})");
+        $mysql->query("UPDATE " . prefix . "_eshop_products SET featured = 1 WHERE id IN ({$id})");
 
         //redirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} обновлены!"));
     }
 
     if (isset($featured_remove)) {
-        $mysql->query("UPDATE ".prefix."_eshop_products SET featured = 0 WHERE id IN ({$id})");
+        $mysql->query("UPDATE " . prefix . "_eshop_products SET featured = 0 WHERE id IN ({$id})");
 
         //edirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} обновлены!"));
     }
 
     if (isset($stocked_add)) {
-        $mysql->query("UPDATE ".prefix."_eshop_products SET stocked = 1 WHERE id IN ({$id})");
+        $mysql->query("UPDATE " . prefix . "_eshop_products SET stocked = 1 WHERE id IN ({$id})");
 
         //redirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} обновлены!"));
     }
 
     if (isset($stocked_remove)) {
-        $mysql->query("UPDATE ".prefix."_eshop_products SET stocked = 0 WHERE id IN ({$id})");
+        $mysql->query("UPDATE " . prefix . "_eshop_products SET stocked = 0 WHERE id IN ({$id})");
 
         //redirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} обновлены!"));
     }
 
     generate_catz_cache(true);
-
 }
 
 function getCats2()
@@ -943,7 +939,7 @@ function getCats2()
     $levels = array();
     $tree = array();
 
-    $rows = $mysql->select("SELECT * FROM ".prefix."_eshop_categories ORDER BY position, id");
+    $rows = $mysql->select("SELECT * FROM " . prefix . "_eshop_categories ORDER BY position, id");
 
     foreach ($rows as $row) {
 
@@ -969,9 +965,9 @@ function getTree($arr, $flg = null, $l = 0)
     foreach ($arr as $k => $v) {
 
         if ($k == $flg) {
-            $out .= '<option value="'.$k.'" selected>'.str_repeat($ft, $l).$v['name'].'</option>';
+            $out .= '<option value="' . $k . '" selected>' . str_repeat($ft, $l) . $v['name'] . '</option>';
         } else {
-            $out .= '<option value="'.$k.'">'.str_repeat($ft, $l).$v['name'].'</option>';
+            $out .= '<option value="' . $k . '">' . str_repeat($ft, $l) . $v['name'] . '</option>';
         }
         if (!empty($v['children'])) {
             //$l = $l + 1;
@@ -1000,8 +996,6 @@ function getChildIdsArray($arr, $flg)
             }
             */
         }
-
-
     }
 
     return $out;
@@ -1025,12 +1019,12 @@ function upload_cat_image()
         $i = 0;
         $parts = pathinfo($img_name);
         $uploadsDir = getUploadsDir();
-        $upload_dir = $uploadsDir.'/eshop/categories/';
-        $upload_thumbnail_dir = $uploadsDir.'/eshop/categories/thumb/';
+        $upload_dir = $uploadsDir . '/eshop/categories/';
+        $upload_thumbnail_dir = $uploadsDir . '/eshop/categories/thumb/';
 
-        while (file_exists($upload_dir.$img_name)) {
+        while (file_exists($upload_dir . $img_name)) {
             $i++;
-            $img_name = $parts["filename"]."-".$i.".".$parts["extension"];
+            $img_name = $parts["filename"] . "-" . $i . "." . $parts["extension"];
         }
 
         $extensions = array_map('trim', explode(',', pluginGetVariable('eshop', 'catz_ext_image')));
@@ -1041,13 +1035,13 @@ function upload_cat_image()
         }
 
         // preserve file from temporary directory
-        $success = move_uploaded_file($myFile["tmp_name"], $upload_dir.$img_name);
+        $success = move_uploaded_file($myFile["tmp_name"], $upload_dir . $img_name);
 
         if (!$success) {
             return "";
         }
 
-        $tempFile = $upload_dir.$img_name;
+        $tempFile = $upload_dir . $img_name;
         $extension = $parts["extension"];
 
         $extensions = array_map('trim', explode(',', pluginGetVariable('eshop', 'catz_ext_image')));
@@ -1067,7 +1061,7 @@ function upload_cat_image()
             }
         }
 
-        list ($width, $height) = getimagesize($tempFile);
+        list($width, $height) = getimagesize($tempFile);
 
         $newwidth = pluginGetVariable('eshop', 'catz_width_thumb');
         $newheight = ($height / $width) * $newwidth;
@@ -1075,7 +1069,7 @@ function upload_cat_image()
 
         imagecopyresampled($tmp, $src, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
 
-        $thumbname = $upload_thumbnail_dir.$img_name;
+        $thumbname = $upload_thumbnail_dir . $img_name;
 
         if (file_exists($thumbname)) {
             unlink($thumbname);
@@ -1085,21 +1079,19 @@ function upload_cat_image()
 
         imagedestroy($src);
         imagedestroy($tmp);
-
     }
 
     return $img_name;
-
 }
 
 function delete_cat_image($img_name)
 {
     $uploadsDir = getUploadsDir();
-    $upload_dir = $uploadsDir.'/eshop/categories/';
-    $upload_thumbnail_dir = $uploadsDir.'/eshop/categories/thumb/';
+    $upload_dir = $uploadsDir . '/eshop/categories/';
+    $upload_thumbnail_dir = $uploadsDir . '/eshop/categories/thumb/';
 
-    $imgname = $upload_dir.$img_name;
-    $thumbname = $upload_thumbnail_dir.$img_name;
+    $imgname = $upload_dir . $img_name;
+    $thumbname = $upload_thumbnail_dir . $img_name;
 
     if (file_exists($imgname)) {
         unlink($imgname);
@@ -1113,11 +1105,11 @@ function delete_cat_image($img_name)
 function delete_product_image($img_name, $qid)
 {
     $uploadsDir = getUploadsDir();
-    $upload_dir = $uploadsDir.'/eshop/products/'.$qid.'/';
-    $upload_thumbnail_dir = $uploadsDir.'/eshop/products/'.$qid.'/thumb/';
+    $upload_dir = $uploadsDir . '/eshop/products/' . $qid . '/';
+    $upload_thumbnail_dir = $uploadsDir . '/eshop/products/' . $qid . '/thumb/';
 
-    $imgname = $upload_dir.$img_name;
-    $thumbname = $upload_thumbnail_dir.$img_name;
+    $imgname = $upload_dir . $img_name;
+    $thumbname = $upload_thumbnail_dir . $img_name;
 
     if (file_exists($imgname)) {
         unlink($imgname);
@@ -1143,16 +1135,16 @@ function add_cat()
         $description = secure_html(trim($_REQUEST['description']));
 
         $url = secure_html(trim($_REQUEST['url']));
-		if (empty($SQL['url'])) {
-			$SQL['url'] = strtolower($parse->translit($SQL['name'], 1, 1));
-		}
+        if (empty($SQL['url'])) {
+            $SQL['url'] = strtolower($parse->translit($SQL['name'], 1, 1));
+        }
         if (empty($url)) {
             $url = strtolower($parse->translit($cat_name, 1, 1));
         }
 
         if ($url) {
             if (is_array(
-                $mysql->record("SELECT id FROM ".prefix."_eshop_categories WHERE url = ".db_squote($url)." LIMIT 1")
+                $mysql->record("SELECT id FROM " . prefix . "_eshop_categories WHERE url = " . db_squote($url) . " LIMIT 1")
             )) {
                 $error_text[] = 'Такой altname уже существует.';
             }
@@ -1178,27 +1170,27 @@ function add_cat()
         $img_name = upload_cat_image();
 
         if (empty($error_text)) {
-            $mysql->query('INSERT INTO '.prefix.'_eshop_categories (name, description, url, meta_title, meta_keywords,  meta_description, parent_id, position, image, active) 
-                VALUES 
-                ('.db_squote($cat_name).',
-                    '.db_squote($description).',
-                    '.db_squote($url).',
-                    '.db_squote($meta_title).',
-                    '.db_squote($meta_keywords).',
-                    '.db_squote($meta_description).',
-                    '.db_squote($parent_id).',
-                    '.db_squote($position).',
-                    '.db_squote($img_name).',
-                    '.(int)$active.'
+            $mysql->query(
+                'INSERT INTO ' . prefix . '_eshop_categories (name, description, url, meta_title, meta_keywords,  meta_description, parent_id, position, image, active)
+                VALUES
+                (' . db_squote($cat_name) . ',
+                    ' . db_squote($description) . ',
+                    ' . db_squote($url) . ',
+                    ' . db_squote($meta_title) . ',
+                    ' . db_squote($meta_keywords) . ',
+                    ' . db_squote($meta_description) . ',
+                    ' . db_squote($parent_id) . ',
+                    ' . db_squote($position) . ',
+                    ' . db_squote($img_name) . ',
+                    ' . (int)$active . '
                 )
             '
             );
 
             generate_catz_cache(true);
-			msg(array('type' => 'info', 'info' => "Категория успешно добавлена"));
-			return list_cat();
+            msg(array('type' => 'info', 'info' => "Категория успешно добавлена"));
+            return list_cat();
         }
-
     }
 
     $error_input = '';
@@ -1229,18 +1221,18 @@ function add_cat()
         'catz' => getTree($cats),
     );
 
-    $xt = $twig->loadTemplate($tpath['config/add_cat'].'config/'.'add_cat.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_cat'] . 'config/' . 'add_cat.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -1256,7 +1248,7 @@ function edit_cat()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_cat'), 'eshop', 1);
 
     $id = (int)$_REQUEST['id'];
-    $row = $mysql->record('SELECT * FROM '.prefix.'_eshop_categories WHERE id = '.db_squote($id).' LIMIT 1');
+    $row = $mysql->record('SELECT * FROM ' . prefix . '_eshop_categories WHERE id = ' . db_squote($id) . ' LIMIT 1');
 
     if (isset($_REQUEST['submit'])) {
 
@@ -1266,16 +1258,17 @@ function edit_cat()
         }
 
         $url = secure_html(trim($_REQUEST['url']));
-		if (empty($url)) {
-			$url = strtolower($parse->translit($cat_name, 1, 1));
-		}
+        if (empty($url)) {
+            $url = strtolower($parse->translit($cat_name, 1, 1));
+        }
         if (empty($url)) {
             $url = strtolower($parse->translit($cat_name, 1, 1));
         }
 
         if ($url) {
             if (is_array(
-                $mysql->record("SELECT id FROM ".prefix."_eshop_categories WHERE url = ".db_squote($url)." AND id <> ".$id." LIMIT 1"))) {
+                $mysql->record("SELECT id FROM " . prefix . "_eshop_categories WHERE url = " . db_squote($url) . " AND id <> " . $id . " LIMIT 1")
+            )) {
                 $error_text[] = 'Такой altname уже существует.';
             }
         }
@@ -1301,7 +1294,7 @@ function edit_cat()
 
         $img_name = upload_cat_image();
         if ($img_name != "") {
-            $image_sql = "image = ".db_squote($img_name).",";
+            $image_sql = "image = " . db_squote($img_name) . ",";
         } else {
             $image_sql = "";
         }
@@ -1314,13 +1307,12 @@ function edit_cat()
 
         if (empty($error_text)) {
 
-            $mysql->query('UPDATE '.prefix.'_eshop_categories SET   name = '.db_squote($cat_name).', description = '.db_squote($description).',  url = '.db_squote($url).', meta_title = '.db_squote($meta_title).', meta_keywords = '.db_squote($meta_keywords).', meta_description = '.db_squote($meta_description).', parent_id = '.db_squote($parent_id).', position = '.db_squote($position).', '.$image_sql.'active = '.db_squote($active).'WHERE id = '.$id.'');
+            $mysql->query('UPDATE ' . prefix . '_eshop_categories SET   name = ' . db_squote($cat_name) . ', description = ' . db_squote($description) . ',  url = ' . db_squote($url) . ', meta_title = ' . db_squote($meta_title) . ', meta_keywords = ' . db_squote($meta_keywords) . ', meta_description = ' . db_squote($meta_description) . ', parent_id = ' . db_squote($parent_id) . ', position = ' . db_squote($position) . ', ' . $image_sql . 'active = ' . db_squote($active) . 'WHERE id = ' . $id . '');
 
             generate_catz_cache(true);
-			msg(array('type' => 'info', 'info' => "Категория успешно отредактированна!"));
-			return list_cat();
+            msg(array('type' => 'info', 'info' => "Категория успешно отредактированна!"));
+            return list_cat();
         }
-
     }
 
     $error_input = '';
@@ -1352,18 +1344,18 @@ function edit_cat()
         'catz' => getTree($cats, $row['parent_id'], 0),
     );
 
-    $xt = $twig->loadTemplate($tpath['config/add_cat'].'config/'.'add_cat.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_cat'] . 'config/' . 'add_cat.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -1383,33 +1375,31 @@ function del_cat()
         return msg(array("type" => "error", "text" => "Ошибка, вы не выбрали что хотите удалить"));
     }
 
-    $cnt_products_in_cat = $mysql->record('SELECT COUNT(*) AS cnt FROM '.prefix.'_eshop_products_categories WHERE category_id = '.db_squote($id));
+    $cnt_products_in_cat = $mysql->record('SELECT COUNT(*) AS cnt FROM ' . prefix . '_eshop_products_categories WHERE category_id = ' . db_squote($id));
 
     if ($cnt_products_in_cat['cnt'] == 0) {
-        $row = $mysql->record('SELECT * FROM '.prefix.'_eshop_categories WHERE id = '.db_squote($id).' LIMIT 1');
+        $row = $mysql->record('SELECT * FROM ' . prefix . '_eshop_categories WHERE id = ' . db_squote($id) . ' LIMIT 1');
         delete_cat_image($row['image']);
-        $mysql->query("DELETE FROM ".prefix."_eshop_categories WHERE id = {$id}");
+        $mysql->query("DELETE FROM " . prefix . "_eshop_categories WHERE id = {$id}");
         msg(array("type" => "info", "info" => "Категория удалена"));
         generate_catz_cache(true);
     } else {
         msg(array("type" => "info", "info" => "Категория не может быть удалена, т.к. в ней есть продукция"));
     }
-
-
 }
 
 function list_cat()
 {
     global $mysql, $twig, $config;
 
-	$tpath = locatePluginTemplates(array('config/main', 'config/list_cat', 'config/list_cat_tree'), 'eshop', 1);
+    $tpath = locatePluginTemplates(array('config/main', 'config/list_cat', 'config/list_cat_tree'), 'eshop', 1);
 
     $tVars = array();
 
     //get all categories
     $catz_array = array();
 
-    foreach ($mysql->select("SELECT *, (SELECT COUNT(*) FROM ".prefix."_eshop_products_categories WHERE category_id = id) AS catCnt FROM ".prefix."_eshop_categories ORDER BY position, id") as $row) {
+    foreach ($mysql->select("SELECT *, (SELECT COUNT(*) FROM " . prefix . "_eshop_products_categories WHERE category_id = id) AS catCnt FROM " . prefix . "_eshop_categories ORDER BY position, id") as $row) {
 
         $catz_array[$row['id']] =
             array(
@@ -1428,22 +1418,22 @@ function list_cat()
     $tEntry = generate_menu(0, $catz_array);
     //var_dump($tEntry);
 
-	if(pluginGetVariable('eshop', 'cat_tree')){
-		$xt = $twig->loadTemplate($tpath['config/list_cat'].'config/'.'list_cat_tree.tpl');
-	}else{
-		$xt = $twig->loadTemplate($tpath['config/list_cat'].'config/'.'list_cat.tpl');
-	}
+    if (pluginGetVariable('eshop', 'cat_tree')) {
+        $xt = $twig->loadTemplate($tpath['config/list_cat'] . 'config/' . 'list_cat_tree.tpl');
+    } else {
+        $xt = $twig->loadTemplate($tpath['config/list_cat'] . 'config/' . 'list_cat.tpl');
+    }
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -1451,7 +1441,6 @@ function list_cat()
     );
 
     print $xg->render($tVars);
-
 }
 
 //function that lists categories
@@ -1464,18 +1453,18 @@ function generate_menu($parent, $catz_array)
 
     foreach ($catz_array as $key => $value) {
 
-            $view_link = checkLinkAvailable('eshop', '') ?
-                generateLink('eshop', '', array('alt' => $value['alt'])) :
-                generateLink('core', 'plugin', array('plugin' => 'eshop'), array('alt' => $value['alt']));
-				
+        $view_link = checkLinkAvailable('eshop', '') ?
+            generateLink('eshop', '', array('alt' => $value['alt'])) :
+            generateLink('core', 'plugin', array('plugin' => 'eshop'), array('alt' => $value['alt']));
+
         if ($value['parent'] == $parent) {
-			
+
             $gvars[] = array(
                 'id' => $value['CategoryID'],
                 'alt' => $value['alt'],
                 'cat_name' => $value['CategoryName'],
-                'edit_link' => "?mod=extra-config&plugin=eshop&action=edit_cat&id=".$value['CategoryID'],
-                'del_link' => "?mod=extra-config&plugin=eshop&action=del_cat&id=".$value['CategoryID'],
+                'edit_link' => "?mod=extra-config&plugin=eshop&action=edit_cat&id=" . $value['CategoryID'],
+                'del_link' => "?mod=extra-config&plugin=eshop&action=del_cat&id=" . $value['CategoryID'],
                 'view_link' => $view_link,
                 'prefix' => get_prefix($value['CategoryID']),
                 'parent' => $value['parent'],
@@ -1491,78 +1480,80 @@ function generate_menu($parent, $catz_array)
             //call function again to generate list for subcategories belonging to current category
             generate_menu($key, $catz_array);
         }
-		
-		unset ($temp_child_catz);
+
+        unset($temp_child_catz);
     }
-	
+
     #var_dump($gvars);
     #var_dump("=========================================");
 
     #var_dump($gvars);
 
-	if(pluginGetVariable('eshop', 'cat_tree')){
-		$tree = cat_tree($catz_array);
-		$cat_menu = cat_show($tree);
+    if (pluginGetVariable('eshop', 'cat_tree')) {
+        $tree = cat_tree($catz_array);
+        $cat_menu = cat_show($tree);
 
-		return $cat_menu;
-	}else{
-		return $gvars;
-	}
-	
+        return $cat_menu;
+    } else {
+        return $gvars;
+    }
 }
 
-function cat_tree($dataset) {
+function cat_tree($dataset)
+{
     $tree = array();
 
-    foreach ($dataset as $id => &$node) {    
-        if (!$node['parent']){
+    foreach ($dataset as $id => &$node) {
+        if (!$node['parent']) {
             $tree[$id] = &$node;
-        }else{ 
+        } else {
             $dataset[$node['parent']]['childs'][$id] = &$node;
         }
     }
     return $tree;
 }
 
-function cat_gen_menu($category){
-	global $mysql;
-	
-	if ($category['parent'] == $parent) {
-		$span = ' class="cat_active"';
-		$class = ' class="cat_bar"';
-	}else{ 
-		$span = '';
-		$class = '';
-	}
+function cat_gen_menu($category)
+{
+    global $mysql;
+
+    if ($category['parent'] == $parent) {
+        $span = ' class="cat_active"';
+        $class = ' class="cat_bar"';
+    } else {
+        $span = '';
+        $class = '';
+    }
 
     $view_link = checkLinkAvailable('eshop', '') ?
         generateLink('eshop', '', array('alt' => $category['alt'])) :
         generateLink('core', 'plugin', array('plugin' => 'eshop'), array('alt' => $category['alt']));
-		
-	$del_link = "?mod=extra-config&plugin=eshop&action=del_cat&id=".$category['CategoryID'];
-	$edit_link = "?mod=extra-config&plugin=eshop&action=edit_cat&id=".$category['CategoryID'];
-	$thumb = $category['IconFile'] ? '<span class="cat_img" style="padding-left:8px;"><img src="/uploads/eshop/categories/thumb/'.$category['IconFile'].'" /></span>' : '';
 
-	$menu = "<li".$class." style='list-style-type: none;padding: 10px;background: azure;'>
+    $del_link = "?mod=extra-config&plugin=eshop&action=del_cat&id=" . $category['CategoryID'];
+    $edit_link = "?mod=extra-config&plugin=eshop&action=edit_cat&id=" . $category['CategoryID'];
+    $thumb = $category['IconFile'] ? '<span class="cat_img" style="padding-left:8px;"><img src="/uploads/eshop/categories/thumb/' . $category['IconFile'] . '" /></span>' : '';
+
+    $menu = "<li" . $class . " style='list-style-type: none;padding: 10px;background: azure;'>
 	<div class='action-list'>
-	".$thumb."
-	<span style='padding-left:8px;'><a href='".$edit_link."' title=''><img src='".admin_url."/plugins/eshop/tpl/img/edit.png'></a></span>
-	<span style='padding-left:8px;'><a href='".$del_link."'/><img src='".admin_url."/plugins/eshop/tpl/img/delete.png'></a></span>
-	<span>#".$category['CategoryID']."</span>
+	" . $thumb . "
+	<span style='padding-left:8px;'><a href='" . $edit_link . "' title=''><img src='" . admin_url . "/plugins/eshop/tpl/img/edit.png'></a></span>
+	<span style='padding-left:8px;'><a href='" . $del_link . "'/><img src='" . admin_url . "/plugins/eshop/tpl/img/delete.png'></a></span>
+	<span>#" . $category['CategoryID'] . "</span>
 	</div>";
-	
-	$menu .= "<span".$span."><a href='".$view_link."' title='". $category['CategoryName'] ."'>".$category['CategoryName']."</a><br><small><a href='".home.$view_link."' title=''>".home.$view_link."</a></small></span>";
-    if(isset($category['childs'])){
-       $menu .= '<ul>'. cat_show($category['childs']) .'</ul>';
+
+    $menu .= "<span" . $span . "><a href='" . $view_link . "' title='" . $category['CategoryName'] . "'>" . $category['CategoryName'] . "</a><br><small><a href='" . home . $view_link . "' title=''>" . home . $view_link . "</a></small></span>";
+    if (isset($category['childs'])) {
+        $menu .= '<ul>' . cat_show($category['childs']) . '</ul>';
     }
-	$menu .= '</li>';
-    
+    $menu .= '</li>';
+
     return $menu;
 }
 
-function cat_show($data){
+function cat_show($data)
+{
     $string = '';
-    foreach($data as $item){
+    foreach ($data as $item) {
         $string .= cat_gen_menu($item);
     }
     return $string;
@@ -1572,10 +1563,10 @@ function cat_show($data){
 function get_prefix($CategoryID)
 {
     global $mysql, $prefixed;
-    $ParentID = $mysql->result('SELECT parent_id FROM '.prefix.'_eshop_categories WHERE id = '.$CategoryID.' ');
+    $ParentID = $mysql->result('SELECT parent_id FROM ' . prefix . '_eshop_categories WHERE id = ' . $CategoryID . ' ');
 
     $prefixed[$CategoryID]['f'] .= '&nbsp;&nbsp;&nbsp;';
-    #$add_prefix .= '&nbsp;&nbsp;&nbsp;'; 
+    #$add_prefix .= '&nbsp;&nbsp;&nbsp;';
     {
         if ($ParentID == 0) {
             $add_prefix .= '';
@@ -1583,7 +1574,7 @@ function get_prefix($CategoryID)
             $prefixed[$CategoryID]['s'] .= '<img src="/engine/plugins/eshop/tpl/img/tree.gif">&nbsp;&nbsp;&nbsp;';
             $add_prefix .= '<img src="/engine/plugins/eshop/tpl/img/tree.gif">&nbsp;&nbsp;&nbsp;';
 
-            foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_categories WHERE id=".$ParentID." ") as $row2) {
+            foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_categories WHERE id=" . $ParentID . " ") as $row2) {
                 $CategoryID2 = $row2['id'];
                 $ParentID2 = $row2['parent_id'];
             }
@@ -1607,9 +1598,9 @@ function list_feature()
     //get all categories
     $catz_array = array();
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_features ORDER BY position, id") as $row) {
-        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_feature&id=".$row['id'];
-        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_feature&id=".$row['id'];
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_features ORDER BY position, id") as $row) {
+        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_feature&id=" . $row['id'];
+        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_feature&id=" . $row['id'];
         $row['foptions'] = json_decode($row['foptions'], true);
         foreach ($row['foptions'] as $key => $value) {
             $row['foptions'][$key] = iconv("utf-8", "windows-1251", $value);
@@ -1617,18 +1608,18 @@ function list_feature()
         $tEntry[] = $row;
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_feature'].'config/'.'list_feature.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_feature'] . 'config/' . 'list_feature.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -1636,7 +1627,6 @@ function list_feature()
     );
 
     print $xg->render($tVars);
-
 }
 
 function add_feature()
@@ -1697,25 +1687,24 @@ function add_feature()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('INSERT INTO '.prefix.'_eshop_features SET '.implode(', ', $vnames).' ');
+            $mysql->query('INSERT INTO ' . prefix . '_eshop_features SET ' . implode(', ', $vnames) . ' ');
 
-			$rowID = lastid('eshop_features');
-			
+            $rowID = lastid('eshop_features');
+
             $ids = $_REQUEST['feature_categories'];
 
             foreach ($ids as $id) {
-                $mysql->query('INSERT INTO '.prefix.'_eshop_categories_features (category_id, feature_id) VALUES ('.db_squote($id).','.db_squote($rowID).')');
+                $mysql->query('INSERT INTO ' . prefix . '_eshop_categories_features (category_id, feature_id) VALUES (' . db_squote($id) . ',' . db_squote($rowID) . ')');
             }
 
             generate_features_cache(true);
             generate_categories_features_cache(true);
-			
-			msg(array('type' => 'info', 'info' => "Новое свойство успешно добавлено!"));
-			return list_feature();
-        }
 
+            msg(array('type' => 'info', 'info' => "Новое свойство успешно добавлено!"));
+            return list_feature();
+        }
     }
 
     $error_input = '';
@@ -1734,19 +1723,19 @@ function add_feature()
     $tEntry['error'] = $error_input;
     $tEntry['catz'] = getTree($cats);
 
-    $xt = $twig->loadTemplate($tpath['config/add_feature'].'config/'.'add_feature.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_feature'] . 'config/' . 'add_feature.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
         'mode' => "add",
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -1762,7 +1751,7 @@ function edit_feature()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_feature'), 'eshop', 1);
 
     $id = (int)$_REQUEST['id'];
-    $row = $mysql->record('SELECT * FROM '.prefix.'_eshop_features WHERE id = '.db_squote($id).' LIMIT 1');
+    $row = $mysql->record('SELECT * FROM ' . prefix . '_eshop_features WHERE id = ' . db_squote($id) . ' LIMIT 1');
 
     if (isset($_REQUEST['submit'])) {
 
@@ -1818,24 +1807,23 @@ function edit_feature()
 
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('UPDATE '.prefix.'_eshop_features SET '.implode(', ', $vnames).' WHERE id = \''.(int)$id.'\' ');
+            $mysql->query('UPDATE ' . prefix . '_eshop_features SET ' . implode(', ', $vnames) . ' WHERE id = \'' . (int)$id . '\' ');
 
-            $mysql->query("delete from ".prefix."_eshop_categories_features where feature_id in ({$id})");
+            $mysql->query("delete from " . prefix . "_eshop_categories_features where feature_id in ({$id})");
             $ids = $_REQUEST['feature_categories'];
 
             foreach ($ids as $id_x) {
-                $mysql->query('INSERT INTO '.prefix.'_eshop_categories_features (category_id, feature_id) VALUES ('.db_squote($id_x).','.db_squote($id).')');
+                $mysql->query('INSERT INTO ' . prefix . '_eshop_categories_features (category_id, feature_id) VALUES (' . db_squote($id_x) . ',' . db_squote($id) . ')');
             }
 
             generate_features_cache(true);
             generate_categories_features_cache(true);
-			
-			msg(array('type' => 'info', 'info' => "Свойство успешно отредактированно"));
-			return list_feature();
-        }
 
+            msg(array('type' => 'info', 'info' => "Свойство успешно отредактированно"));
+            return list_feature();
+        }
     }
 
     $error_input = '';
@@ -1848,9 +1836,11 @@ function edit_feature()
     $cats = getCats2();
 
     $cat_ids = array();
-    foreach ($mysql->select(
-        "SELECT * FROM ".prefix."_eshop_categories_features WHERE feature_id = ".db_squote($id).""
-    ) as $frow) {
+    foreach (
+        $mysql->select(
+            "SELECT * FROM " . prefix . "_eshop_categories_features WHERE feature_id = " . db_squote($id) . ""
+        ) as $frow
+    ) {
         $cat_ids[] = $frow['category_id'];
     }
 
@@ -1867,30 +1857,30 @@ function edit_feature()
     if ($tEntry['ftype'] == '2') {
         if (is_array($tEntry['foptions'])) {
             foreach ($tEntry['foptions'] as $k => $v) {
-                array_push($sOpts,'<tr><td><input size="12" name="so_data['.($fNum).'][0]" type="text" value="'.($tEntry['foptions'] ? htmlspecialchars($k, ENT_COMPAT | ENT_HTML401, 'cp1251') : '').'"/></td><td><input type="text" size="55" name="so_data['.($fNum).'][1]" value="'.iconv("utf-8","windows-1251",$v).'"/></td><td><a href="#" onclick="return false;"><img src="'.admin_url.'/plugins/eshop/tpl/img/delete.png" alt="DEL" width="12" height="12" /></a></td></tr>');
+                array_push($sOpts, '<tr><td><input size="12" name="so_data[' . ($fNum) . '][0]" type="text" value="' . ($tEntry['foptions'] ? htmlspecialchars($k, ENT_COMPAT | ENT_HTML401, 'cp1251') : '') . '"/></td><td><input type="text" size="55" name="so_data[' . ($fNum) . '][1]" value="' . iconv("utf-8", "windows-1251", $v) . '"/></td><td><a href="#" onclick="return false;"><img src="' . admin_url . '/plugins/eshop/tpl/img/delete.png" alt="DEL" width="12" height="12" /></a></td></tr>');
                 $fNum++;
             }
         }
     }
     if (!count($sOpts)) {
-        array_push($sOpts,'<tr><td><input size="12" name="so_data[1][0]" type="text" value=""/></td><td><input type="text" size="55" name="so_data[1][1]" value=""/></td><td><a href="#" onclick="return false;"><img src="'.admin_url.'/plugins/eshop/tpl/img/delete.png" alt="DEL" width="12" height="12" /></a></td></tr>');
+        array_push($sOpts, '<tr><td><input size="12" name="so_data[1][0]" type="text" value=""/></td><td><input type="text" size="55" name="so_data[1][1]" value=""/></td><td><a href="#" onclick="return false;"><img src="' . admin_url . '/plugins/eshop/tpl/img/delete.png" alt="DEL" width="12" height="12" /></a></td></tr>');
     }
 
     $tEntry['sOpts'] = implode("\n", $sOpts);
 
-    $xt = $twig->loadTemplate($tpath['config/add_feature'].'config/'.'add_feature.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_feature'] . 'config/' . 'add_feature.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
         'mode' => "edit",
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -1908,9 +1898,9 @@ function getMultiTree($arr, $flg, $l)
 
     foreach ($arr as $k => $v) {
         if (in_array($k, $flg)) {
-            $out .= '<option value="'.$k.'" selected>'.str_repeat($ft, $l).$v['name'].'</option>';
+            $out .= '<option value="' . $k . '" selected>' . str_repeat($ft, $l) . $v['name'] . '</option>';
         } else {
-            $out .= '<option value="'.$k.'">'.str_repeat($ft, $l).$v['name'].'</option>';
+            $out .= '<option value="' . $k . '">' . str_repeat($ft, $l) . $v['name'] . '</option>';
         }
         if (!empty($v['children'])) {
             //$l = $l + 1;
@@ -1927,24 +1917,24 @@ function modify_feature()
     global $mysql;
 
     $selected_feature = $_REQUEST['selected_feature'];
-	
+
     if (!$selected_feature)
         return msg(array("type" => "error", "text" => "Не выбран ID!"));
-	
+
     $subaction = $_REQUEST['subaction'];
 
     $id = implode(',', $selected_feature);
 
     switch ($subaction) {
-        case 'mass_delete'       :
+        case 'mass_delete':
             $del = true;
             break;
     }
 
     if (isset($del)) {
-        $mysql->query("delete from ".prefix."_eshop_features where id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_categories_features where feature_id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_options where feature_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_features where id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_categories_features where feature_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_options where feature_id in ({$id})");
         msg(array("type" => "info", "info" => "Записи с ID${id} удалены!"));
     }
 
@@ -1991,38 +1981,38 @@ function list_order()
 
     $conditions = array();
     if ($fName) {
-        array_push($conditions, "name LIKE ".db_squote("%".$fName."%"));
+        array_push($conditions, "name LIKE " . db_squote("%" . $fName . "%"));
     }
 
     if ($fPhone) {
-        array_push($conditions, "phone LIKE ".db_squote("%".$fPhone."%"));
+        array_push($conditions, "phone LIKE " . db_squote("%" . $fPhone . "%"));
     }
 
     if ($fAdress) {
-        array_push($conditions, "address LIKE ".db_squote("%".$fAdress."%"));
+        array_push($conditions, "address LIKE " . db_squote("%" . $fAdress . "%"));
     }
 
     if ($fCustomerName) {
-        $sqlQCustomer = "SELECT id FROM ".prefix."_users WHERE name = ".db_squote($fCustomerName).";";
+        $sqlQCustomer = "SELECT id FROM " . prefix . "_users WHERE name = " . db_squote($fCustomerName) . ";";
         $customer_id = $mysql->result($sqlQCustomer);
-        array_push($conditions, "author_id = ".db_squote($customer_id));
+        array_push($conditions, "author_id = " . db_squote($customer_id));
     }
 
     if ($fDateStart && $fDateEnd) {
-        $fDateEndWithTime = $fDateEnd." 23:59:59";
-        array_push($conditions,"dt BETWEEN UNIX_TIMESTAMP(STR_TO_DATE(".db_squote($fDateStart).",'%d.%m.%Y')) AND UNIX_TIMESTAMP(STR_TO_DATE(".db_squote($fDateEndWithTime).",'%d.%m.%Y %H:%i:%s'))");
+        $fDateEndWithTime = $fDateEnd . " 23:59:59";
+        array_push($conditions, "dt BETWEEN UNIX_TIMESTAMP(STR_TO_DATE(" . db_squote($fDateStart) . ",'%d.%m.%Y')) AND UNIX_TIMESTAMP(STR_TO_DATE(" . db_squote($fDateEndWithTime) . ",'%d.%m.%Y %H:%i:%s'))");
     } elseif ($fDateStart) {
-        array_push($conditions,"dt BETWEEN UNIX_TIMESTAMP(STR_TO_DATE(".db_squote($fDateStart).",'%d.%m.%Y')) AND NOW()");
+        array_push($conditions, "dt BETWEEN UNIX_TIMESTAMP(STR_TO_DATE(" . db_squote($fDateStart) . ",'%d.%m.%Y')) AND NOW()");
     } elseif ($fDateEnd) {
-        $fDateEndWithTime = $fDateEnd." 23:59:59";
-        array_push($conditions,"dt BETWEEN UNIX_TIMESTAMP(STR_TO_DATE('01.01.1970','%d.%m.%Y')) AND UNIX_TIMESTAMP(STR_TO_DATE(".db_squote($fDateEndWithTime).",'%d.%m.%Y %H:%i:%s'))");
+        $fDateEndWithTime = $fDateEnd . " 23:59:59";
+        array_push($conditions, "dt BETWEEN UNIX_TIMESTAMP(STR_TO_DATE('01.01.1970','%d.%m.%Y')) AND UNIX_TIMESTAMP(STR_TO_DATE(" . db_squote($fDateEndWithTime) . ",'%d.%m.%Y %H:%i:%s'))");
     }
 
     $fSort = " ORDER BY id DESC";
-    $sqlQPart = "FROM ".prefix."_eshop_orders ".(count($conditions) ? "WHERE ".implode(" AND ",$conditions) : '').$fSort;
-    $sqlQ = "SELECT * ".$sqlQPart;
+    $sqlQPart = "FROM " . prefix . "_eshop_orders " . (count($conditions) ? "WHERE " . implode(" AND ", $conditions) : '') . $fSort;
+    $sqlQ = "SELECT * " . $sqlQPart;
 
-    $sqlQCount = "SELECT COUNT(*) AS CNT FROM (".$sqlQ.") AS T ";
+    $sqlQCount = "SELECT COUNT(*) AS CNT FROM (" . $sqlQ . ") AS T ";
 
     //$sqlQCount = "SELECT COUNT(p.id) FROM ng_eshop_products p ORDER BY p.id DESC";
     //var_dump($sqlQ);
@@ -2038,21 +2028,20 @@ function list_order()
     $count = $mysql->result($sqlQCount);
     $countPages = ceil($count / $news_per_page);
 
-    foreach ($mysql->select($sqlQ.' LIMIT '.$start_from.', '.$news_per_page) as $row) {
+    foreach ($mysql->select($sqlQ . ' LIMIT ' . $start_from . ', ' . $news_per_page) as $row) {
 
-        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_order&id=".$row['id'];
+        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_order&id=" . $row['id'];
         $tEntry[] = $row;
-
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_order'].'config/'.'list_order.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_order'] . 'config/' . 'list_order.tpl');
 
     $tVars = array(
         'pagesss' => generateAdminPagelist(
             array(
                 'current' => $pageNo,
                 'count' => $countPages,
-                'url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop&action=list_order'.($news_per_page ? '&rpp='.$news_per_page : '').($fName ? '&fname='.$fName : '').($fPhone ? '&fphone='.$fPhone : '').($fAdress ? '&fadress='.$fAdress : '').'&page=%page%',
+                'url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop&action=list_order' . ($news_per_page ? '&rpp=' . $news_per_page : '') . ($fName ? '&fname=' . $fName : '') . ($fPhone ? '&fphone=' . $fPhone : '') . ($fAdress ? '&fadress=' . $fAdress : '') . '&page=%page%',
             )
         ),
         'rpp' => $news_per_page,
@@ -2065,12 +2054,12 @@ function list_order()
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2078,7 +2067,6 @@ function list_order()
     );
 
     print $xg->render($tVars);
-
 }
 
 function edit_order()
@@ -2087,7 +2075,7 @@ function edit_order()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_order'), 'eshop', 1);
 
     $id = (int)$_REQUEST['id'];
-    $row = $mysql->record('SELECT *, o.id AS id, o.ip AS ip, o.name AS name, u.name AS author, o.paid AS paid FROM '.prefix.'_eshop_orders o LEFT JOIN '.prefix.'_users u ON o.author_id = u.id WHERE o.id = '.db_squote($id).' LIMIT 1');
+    $row = $mysql->record('SELECT *, o.id AS id, o.ip AS ip, o.name AS name, u.name AS author, o.paid AS paid FROM ' . prefix . '_eshop_orders o LEFT JOIN ' . prefix . '_users u ON o.author_id = u.id WHERE o.id = ' . db_squote($id) . ' LIMIT 1');
 
     if (isset($_REQUEST['submit'])) {
 
@@ -2104,11 +2092,10 @@ function edit_order()
 
         if (empty($error_text)) {
 
-            $mysql->query('UPDATE '.prefix.'_eshop_orders SET name = '.db_squote($name).', email = '.db_squote($email).', phone = '.db_squote($phone).', address = '.db_squote($address).', comment = '.db_squote($comment).', paid = '.db_squote($paid).', payment_type_id = '.db_squote($payment_type_id).', delivery_type_id = '.db_squote($delivery_type_id).' WHERE id = '.$id.'');
-			msg(array("type" => "info", "info" => "Заказ от {$name} успешно отрдактирован"));
-			return list_order();
+            $mysql->query('UPDATE ' . prefix . '_eshop_orders SET name = ' . db_squote($name) . ', email = ' . db_squote($email) . ', phone = ' . db_squote($phone) . ', address = ' . db_squote($address) . ', comment = ' . db_squote($comment) . ', paid = ' . db_squote($paid) . ', payment_type_id = ' . db_squote($payment_type_id) . ', delivery_type_id = ' . db_squote($delivery_type_id) . ' WHERE id = ' . $id . '');
+            msg(array("type" => "info", "info" => "Заказ от {$name} успешно отрдактирован"));
+            return list_order();
         }
-
     }
 
     $error_input = '';
@@ -2120,28 +2107,28 @@ function edit_order()
 
     $filter = array();
     if ($id) {
-        $filter [] = '(order_id = '.db_squote($id).')';
+        $filter[] = '(order_id = ' . db_squote($id) . ')';
     }
 
     $basket = array();
     $total = 0;
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_order_basket WHERE ".join(" or ", $filter), 1) as $rec) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_order_basket WHERE " . join(" or ", $filter), 1) as $rec) {
         $total += round($rec['price'] * $rec['count'], 2);
 
         $rec['sum'] = sprintf('%9.2f', round($rec['price'] * $rec['count'], 2));
         $rec['xfields'] = unserialize($rec['linked_fld']);
         unset($rec['linked_fld']);
 
-        $basket [] = $rec;
+        $basket[] = $rec;
     }
 
     $purchases = array();
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_purchases WHERE ".join(" or ", $filter), 1) as $prow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_purchases WHERE " . join(" or ", $filter), 1) as $prow) {
         $prow['info'] = json_decode($prow['info'], true);
         foreach ($prow['info'] as $k_info => $v_info) {
-            $prow['info_string'] .= $k_info." => ".iconv("utf-8", "windows-1251", $v_info)."<br/>";
+            $prow['info_string'] .= $k_info . " => " . iconv("utf-8", "windows-1251", $v_info) . "<br/>";
         }
-        $purchases [] = $prow;
+        $purchases[] = $prow;
     }
 
     $row['profile_link'] = checkLinkAvailable('uprofile', 'show') ?
@@ -2156,22 +2143,22 @@ function edit_order()
     $tEntry['entriesDeliveryTypes'] = getDeliveryTypes();
     $tEntry['entriesPaymentTypes'] = getPaymentTypes();
 
-    $xt = $twig->loadTemplate($tpath['config/add_order'].'config/'.'add_order.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_order'] . 'config/' . 'add_order.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
-        'current_title' => 'Заказ: Карточка заказа (ID: '.$id.')',
+        'current_title' => 'Заказ: Карточка заказа (ID: ' . $id . ')',
     );
 
     print $xg->render($tVars);
@@ -2185,20 +2172,20 @@ function modify_order()
 
     if (!$selected_order)
         return msg(array("type" => "error", "text" => "Не выбран ID!"));
-	
+
     $subaction = $_REQUEST['subaction'];
 
     $id = implode(',', $selected_order);
 
     switch ($subaction) {
-        case 'mass_delete'       :
+        case 'mass_delete':
             $del = true;
             break;
     }
 
     if (isset($del)) {
-        $mysql->query("delete from ".prefix."_eshop_orders where id in ({$id})");
-        $mysql->query("delete from ".prefix."_eshop_order_basket where order_id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_orders where id in ({$id})");
+        $mysql->query("delete from " . prefix . "_eshop_order_basket where order_id in ({$id})");
         msg(array("type" => "info", "info" => "Записи с ID${id} удалены!"));
     }
 }
@@ -2226,10 +2213,10 @@ function list_comment()
     $conditions = array();
 
     $fSort = "ORDER BY c.postdate DESC";
-    $sqlQPart = "from ".prefix."_eshop_products_comments c LEFT JOIN ".prefix."_users u ON c.author_id = u.id LEFT JOIN ".prefix."_eshop_products p ON c.product_id = p.id ".(count($conditions) ? "where ".implode(" AND ", $conditions) : '').' '.$fSort;
-    $sqlQ = "select c.id as cid, u.id as uid, u.name as uname, c.name as name, p.id as product_id, p.url as url, p.name as title, c.mail as mail, c.postdate as postdate, c.author as author, c.author_id as author_id, u.avatar as avatar, c.reg as reg, c.text as text, c.status as status ".$sqlQPart;
+    $sqlQPart = "from " . prefix . "_eshop_products_comments c LEFT JOIN " . prefix . "_users u ON c.author_id = u.id LEFT JOIN " . prefix . "_eshop_products p ON c.product_id = p.id " . (count($conditions) ? "where " . implode(" AND ", $conditions) : '') . ' ' . $fSort;
+    $sqlQ = "select c.id as cid, u.id as uid, u.name as uname, c.name as name, p.id as product_id, p.url as url, p.name as title, c.mail as mail, c.postdate as postdate, c.author as author, c.author_id as author_id, u.avatar as avatar, c.reg as reg, c.text as text, c.status as status " . $sqlQPart;
 
-    $sqlQCount = "SELECT COUNT(*) AS CNT FROM (".$sqlQ.") AS T ";
+    $sqlQCount = "SELECT COUNT(*) AS CNT FROM (" . $sqlQ . ") AS T ";
 
     $pageNo = (int)$_REQUEST['page'] ? $_REQUEST['page'] : 0;
     if ($pageNo < 1) {
@@ -2242,7 +2229,7 @@ function list_comment()
     $count = $mysql->result($sqlQCount);
     $countPages = ceil($count / $news_per_page);
 
-    foreach ($mysql->select($sqlQ.' LIMIT '.$start_from.', '.$news_per_page) as $row) {
+    foreach ($mysql->select($sqlQ . ' LIMIT ' . $start_from . ', ' . $news_per_page) as $row) {
         // Add [hide] tag processing
         $text = $row['text'];
 
@@ -2260,11 +2247,11 @@ function list_comment()
 
             $tplVars = $TemplateCache['site']['#variables'];
             $noAvatarURL = (isset($tplVars['configuration']) && is_array(
-                    $tplVars['configuration']
-                ) && isset($tplVars['configuration']['noAvatarImage']) && $tplVars['configuration']['noAvatarImage']) ? (tpl_url."/".$tplVars['configuration']['noAvatarImage']) : (avatars_url."/noavatar.gif");
+                $tplVars['configuration']
+            ) && isset($tplVars['configuration']['noAvatarImage']) && $tplVars['configuration']['noAvatarImage']) ? (tpl_url . "/" . $tplVars['configuration']['noAvatarImage']) : (avatars_url . "/noavatar.gif");
 
             if ($row['avatar']) {
-                $avatar = avatars_url."/".$row['avatar'];
+                $avatar = avatars_url . "/" . $row['avatar'];
             } else {
                 $avatar = $noAvatarURL;
             }
@@ -2289,14 +2276,13 @@ function list_comment()
             'commenttext' => $text,
             'title' => $row['title'],
             'view_link' => $view_link,
-            'product_edit_link' => "?mod=extra-config&plugin=eshop&action=edit_product&id=".$row['product_id']."",
+            'product_edit_link' => "?mod=extra-config&plugin=eshop&action=edit_product&id=" . $row['product_id'] . "",
             'reg' => $row['reg'],
             'status' => $row['status'],
         );
-
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_comment'].'config/'.'list_comment.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_comment'] . 'config/' . 'list_comment.tpl');
 
     $tVars = array(
         'entries' => isset($tEntries) ? $tEntries : '',
@@ -2304,18 +2290,18 @@ function list_comment()
             array(
                 'current' => $pageNo,
                 'count' => $countPages,
-                'url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop&action=list_comment'.($news_per_page ? '&rpp='.$news_per_page : '').'&page=%page%',
+                'url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop&action=list_comment' . ($news_per_page ? '&rpp=' . $news_per_page : '') . '&page=%page%',
             )
         ),
         'rpp' => $news_per_page,
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2323,7 +2309,6 @@ function list_comment()
     );
 
     print $xg->render($tVars);
-
 }
 
 function modify_comment()
@@ -2331,50 +2316,49 @@ function modify_comment()
     global $mysql;
 
     $selected_comment = $_REQUEST['selected_comment'];
-	
+
     if (!$selected_comment)
         return msg(array("type" => "error", "text" => "Не выбран ID!"));
-	
+
     $subaction = $_REQUEST['subaction'];
 
     $id = implode(',', $selected_comment);
 
     switch ($subaction) {
-        case 'mass_delete'          :
+        case 'mass_delete':
             $del = true;
             break;
-        case 'mass_active_add'      :
+        case 'mass_active_add':
             $active_add = true;
             break;
-        case 'mass_active_remove'   :
+        case 'mass_active_remove':
             $active_remove = true;
             break;
     }
 
     if (isset($del)) {
         foreach ($selected_comment as $com_id) {
-            $com_row = $mysql->record("SELECT * FROM ".prefix."_eshop_products_comments WHERE id=".db_squote($com_id)." ");
-            $mysql->query("DELETE FROM ".prefix."_eshop_products_comments WHERE id = ".db_squote($com_id)." ");
-            $mysql->query("update ".prefix."_eshop_products set comments = comments - 1 where id = ".db_squote($com_row['product_id'])." ");
+            $com_row = $mysql->record("SELECT * FROM " . prefix . "_eshop_products_comments WHERE id=" . db_squote($com_id) . " ");
+            $mysql->query("DELETE FROM " . prefix . "_eshop_products_comments WHERE id = " . db_squote($com_id) . " ");
+            $mysql->query("update " . prefix . "_eshop_products set comments = comments - 1 where id = " . db_squote($com_row['product_id']) . " ");
         }
 
         msg(array("type" => "info", "info" => "Записи с ID${id} удалены!"));
     }
 
     if (isset($active_add)) {
-        $mysql->query("UPDATE ".prefix."_eshop_products_comments SET status = 1 WHERE id IN ({$id})");
+        $mysql->query("UPDATE " . prefix . "_eshop_products_comments SET status = 1 WHERE id IN ({$id})");
 
         //redirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} обновлены!"));
     }
 
     if (isset($active_remove)) {
-        $mysql->query("UPDATE ".prefix."_eshop_products_comments SET status = 0 WHERE id IN ({$id})");
+        $mysql->query("UPDATE " . prefix . "_eshop_products_comments SET status = 0 WHERE id IN ({$id})");
 
         //redirect_eshop('?mod=extra-config&plugin=eshop');
         msg(array("type" => "info", "info" => "Записи с ID ${id} обновлены!"));
     }
-
 }
 
 
@@ -2416,14 +2400,13 @@ function add_currency()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('INSERT INTO '.prefix.'_eshop_currencies SET '.implode(', ', $vnames).' ');
+            $mysql->query('INSERT INTO ' . prefix . '_eshop_currencies SET ' . implode(', ', $vnames) . ' ');
             generate_currency_cache(true);
             msg(array("type" => "info", "info" => "Новая валюта успешно добавлена!"));
-			return list_currencies();
+            return list_currencies();
         }
-
     }
 
     $error_input = '';
@@ -2440,19 +2423,19 @@ function add_currency()
     $tEntry['error'] = $error_input;
     $tEntry['mode'] = "add";
 
-    $xt = $twig->loadTemplate($tpath['config/add_currencies'].'config/'.'add_currencies.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_currencies'] . 'config/' . 'add_currencies.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2468,7 +2451,7 @@ function edit_currency()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_currencies'), 'eshop', 1);
 
     $id = (int)$_REQUEST['id'];
-    $row = $mysql->record('SELECT * FROM '.prefix.'_eshop_currencies WHERE id = '.db_squote($id).' LIMIT 1');
+    $row = $mysql->record('SELECT * FROM ' . prefix . '_eshop_currencies WHERE id = ' . db_squote($id) . ' LIMIT 1');
 
     if (isset($_REQUEST['submit'])) {
 
@@ -2503,17 +2486,15 @@ function edit_currency()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('UPDATE '.prefix.'_eshop_currencies SET '.implode(', ', $vnames).' WHERE id = \''.(int)$id.'\' ');
+            $mysql->query('UPDATE ' . prefix . '_eshop_currencies SET ' . implode(', ', $vnames) . ' WHERE id = \'' . (int)$id . '\' ');
 
             generate_currency_cache(true);
-			
-			msg(array('type' => 'info', 'info' => "Валюта успешно отредактирована!"));
-			return list_currencies();
-			
-        }
 
+            msg(array('type' => 'info', 'info' => "Валюта успешно отредактирована!"));
+            return list_currencies();
+        }
     }
 
     $error_input = '';
@@ -2530,18 +2511,18 @@ function edit_currency()
     $tEntry['error'] = $error_input;
     $tEntry['mode'] = "edit";
 
-    $xt = $twig->loadTemplate($tpath['config/add_currencies'].'config/'.'add_currencies.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_currencies'] . 'config/' . 'add_currencies.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2565,10 +2546,9 @@ function del_currency()
         return msg(array("type" => "error", "text" => "Ошибка, вы не можете уалить основную валюту"));
     }
 
-    $mysql->query("DELETE FROM ".prefix."_eshop_currencies WHERE id = {$id}");
+    $mysql->query("DELETE FROM " . prefix . "_eshop_currencies WHERE id = {$id}");
     generate_currency_cache(true);
     msg(array("type" => "info", "info" => "Валюта удалена"));
-
 }
 
 function list_currencies()
@@ -2579,26 +2559,25 @@ function list_currencies()
 
     $tVars = array();
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_currencies ORDER BY position, id") as $row) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_currencies ORDER BY position, id") as $row) {
 
-        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_currency&id=".$row['id']."";
-        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_currency&id=".$row['id']."";
+        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_currency&id=" . $row['id'] . "";
+        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_currency&id=" . $row['id'] . "";
         $tEntry[] = $row;
-
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_currencies'].'config/'.'list_currencies.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_currencies'] . 'config/' . 'list_currencies.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2606,7 +2585,6 @@ function list_currencies()
     );
 
     print $xg->render($tVars);
-
 }
 
 function add_payment_type()
@@ -2632,14 +2610,13 @@ function add_payment_type()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('INSERT INTO '.prefix.'_eshop_payment_type SET '.implode(', ', $vnames).' ');
-			
-			msg(array('type' => 'info', 'info' => "Способ оплаты успешно добавлен!"));
-			return list_payment_type();
-        }
+            $mysql->query('INSERT INTO ' . prefix . '_eshop_payment_type SET ' . implode(', ', $vnames) . ' ');
 
+            msg(array('type' => 'info', 'info' => "Способ оплаты успешно добавлен!"));
+            return list_payment_type();
+        }
     }
 
     $error_input = '';
@@ -2656,19 +2633,19 @@ function add_payment_type()
     $tEntry['error'] = $error_input;
     $tEntry['mode'] = "add";
 
-    $xt = $twig->loadTemplate($tpath['config/add_payment_type'].'config/'.'add_payment_type.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_payment_type'] . 'config/' . 'add_payment_type.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2684,7 +2661,7 @@ function edit_payment_type()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_payment_type'), 'eshop', 1);
 
     $id = (int)$_REQUEST['id'];
-    $row = $mysql->record('SELECT * FROM '.prefix.'_eshop_payment_type WHERE id = '.db_squote($id).' LIMIT 1');
+    $row = $mysql->record('SELECT * FROM ' . prefix . '_eshop_payment_type WHERE id = ' . db_squote($id) . ' LIMIT 1');
 
     if (isset($_REQUEST['submit'])) {
 
@@ -2704,14 +2681,13 @@ function edit_payment_type()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('UPDATE '.prefix.'_eshop_payment_type SET '.implode(', ', $vnames).' WHERE id = \''.(int)$id.'\' ');
-			
-			msg(array('type' => 'info', 'info' => "Способ оплаты успешно отредактирован!"));
+            $mysql->query('UPDATE ' . prefix . '_eshop_payment_type SET ' . implode(', ', $vnames) . ' WHERE id = \'' . (int)$id . '\' ');
+
+            msg(array('type' => 'info', 'info' => "Способ оплаты успешно отредактирован!"));
             return list_payment_type();
         }
-
     }
 
     $error_input = '';
@@ -2728,18 +2704,18 @@ function edit_payment_type()
     $tEntry['error'] = $error_input;
     $tEntry['mode'] = "edit";
 
-    $xt = $twig->loadTemplate($tpath['config/add_payment_type'].'config/'.'add_payment_type.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_payment_type'] . 'config/' . 'add_payment_type.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2763,9 +2739,8 @@ function del_payment_type()
         return msg(array("type" => "error", "text" => "Ошибка, вы не можете уалить основную валюту"));
     }
 
-    $mysql->query("DELETE FROM ".prefix."_eshop_payment_type WHERE id = {$id}");
+    $mysql->query("DELETE FROM " . prefix . "_eshop_payment_type WHERE id = {$id}");
     msg(array("type" => "info", "info" => "Способ оплаты удален"));
-
 }
 
 function list_payment_type()
@@ -2776,26 +2751,25 @@ function list_payment_type()
 
     $tVars = array();
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_payment_type ORDER BY position, id") as $row) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_payment_type ORDER BY position, id") as $row) {
 
-        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_payment_type&id=".$row['id']."";
-        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_payment_type&id=".$row['id']."";
+        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_payment_type&id=" . $row['id'] . "";
+        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_payment_type&id=" . $row['id'] . "";
         $tEntry[] = $row;
-
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_payment_type'].'config/'.'list_payment_type.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_payment_type'] . 'config/' . 'list_payment_type.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2803,7 +2777,6 @@ function list_payment_type()
     );
 
     print $xg->render($tVars);
-
 }
 
 function add_delivery_type()
@@ -2829,14 +2802,13 @@ function add_delivery_type()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('INSERT INTO '.prefix.'_eshop_delivery_type SET '.implode(', ', $vnames).' ');
-			
-			msg(array('type' => 'info', 'info' => "Сопсоб доставки успешно добавлен!"));
+            $mysql->query('INSERT INTO ' . prefix . '_eshop_delivery_type SET ' . implode(', ', $vnames) . ' ');
+
+            msg(array('type' => 'info', 'info' => "Сопсоб доставки успешно добавлен!"));
             return list_delivery_type();
         }
-
     }
 
     $error_input = '';
@@ -2853,19 +2825,19 @@ function add_delivery_type()
     $tEntry['error'] = $error_input;
     $tEntry['mode'] = "add";
 
-    $xt = $twig->loadTemplate($tpath['config/add_delivery_type'].'config/'.'add_delivery_type.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_delivery_type'] . 'config/' . 'add_delivery_type.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2881,7 +2853,7 @@ function edit_delivery_type()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_delivery_type'), 'eshop', 1);
 
     $id = (int)$_REQUEST['id'];
-    $row = $mysql->record('SELECT * FROM '.prefix.'_eshop_delivery_type WHERE id = '.db_squote($id).' LIMIT 1');
+    $row = $mysql->record('SELECT * FROM ' . prefix . '_eshop_delivery_type WHERE id = ' . db_squote($id) . ' LIMIT 1');
 
     if (isset($_REQUEST['submit'])) {
 
@@ -2901,14 +2873,13 @@ function edit_delivery_type()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('UPDATE '.prefix.'_eshop_delivery_type SET '.implode(', ', $vnames).' WHERE id = \''.(int)$id.'\' ');
-			
-			msg(array('type' => 'info', 'info' => "Способ доставки успешно отредактирован!"));
+            $mysql->query('UPDATE ' . prefix . '_eshop_delivery_type SET ' . implode(', ', $vnames) . ' WHERE id = \'' . (int)$id . '\' ');
+
+            msg(array('type' => 'info', 'info' => "Способ доставки успешно отредактирован!"));
             return list_delivery_type();
         }
-
     }
 
     $error_input = '';
@@ -2925,18 +2896,18 @@ function edit_delivery_type()
     $tEntry['error'] = $error_input;
     $tEntry['mode'] = "edit";
 
-    $xt = $twig->loadTemplate($tpath['config/add_delivery_type'].'config/'.'add_delivery_type.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_delivery_type'] . 'config/' . 'add_delivery_type.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -2960,9 +2931,8 @@ function del_delivery_type()
         return msg(array("type" => "error", "text" => "Ошибка, вы не можете уалить основную валюту"));
     }
 
-    $mysql->query("DELETE FROM ".prefix."_eshop_delivery_type WHERE id = {$id}");
+    $mysql->query("DELETE FROM " . prefix . "_eshop_delivery_type WHERE id = {$id}");
     msg(array("type" => "info", "info" => "Способ оплаты удален"));
-
 }
 
 function list_delivery_type()
@@ -2973,26 +2943,25 @@ function list_delivery_type()
 
     $tVars = array();
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_delivery_type ORDER BY position, id") as $row) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_delivery_type ORDER BY position, id") as $row) {
 
-        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_delivery_type&id=".$row['id']."";
-        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_delivery_type&id=".$row['id']."";
+        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_delivery_type&id=" . $row['id'] . "";
+        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_delivery_type&id=" . $row['id'] . "";
         $tEntry[] = $row;
-
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_delivery_type'].'config/'.'list_delivery_type.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_delivery_type'] . 'config/' . 'list_delivery_type.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -3000,7 +2969,6 @@ function list_delivery_type()
     );
 
     print $xg->render($tVars);
-
 }
 
 function list_api()
@@ -3011,26 +2979,25 @@ function list_api()
 
     $tVars = array();
 
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_api") as $row) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_api") as $row) {
 
-        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_api&id=".$row['id']."";
-        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_api&id=".$row['id']."";
+        $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_api&id=" . $row['id'] . "";
+        $row['del_link'] = "?mod=extra-config&plugin=eshop&action=del_api&id=" . $row['id'] . "";
         $tEntry[] = $row;
-
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_api'].'config/'.'list_api.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_api'] . 'config/' . 'list_api.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -3055,13 +3022,12 @@ function add_api()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('INSERT INTO '.prefix.'_eshop_api SET '.implode(', ', $vnames));
-			msg(array('type' => 'info', 'info' => "Токен добавлен!"));
+            $mysql->query('INSERT INTO ' . prefix . '_eshop_api SET ' . implode(', ', $vnames));
+            msg(array('type' => 'info', 'info' => "Токен добавлен!"));
             return list_api();
         }
-
     }
 
     $error_input = '';
@@ -3078,19 +3044,19 @@ function add_api()
     $tEntry['error'] = $error_input;
     $tEntry['mode'] = "add";
 
-    $xt = $twig->loadTemplate($tpath['config/add_api'].'config/'.'add_api.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_api'] . 'config/' . 'add_api.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -3106,7 +3072,7 @@ function edit_api()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_api'), 'eshop', 1);
 
     $id = (int)$_REQUEST['id'];
-    $row = $mysql->record('SELECT * FROM '.prefix.'_eshop_api WHERE id = '.db_squote($id).' LIMIT 1');
+    $row = $mysql->record('SELECT * FROM ' . prefix . '_eshop_api WHERE id = ' . db_squote($id) . ' LIMIT 1');
 
     if (isset($_REQUEST['submit'])) {
 
@@ -3118,14 +3084,13 @@ function edit_api()
         if (empty($error_text)) {
             $vnames = array();
             foreach ($SQL as $k => $v) {
-                $vnames[] = $k.' = '.db_squote($v);
+                $vnames[] = $k . ' = ' . db_squote($v);
             }
-            $mysql->query('UPDATE '.prefix.'_eshop_api SET '.implode(', ', $vnames).' WHERE id = \''.(int)$id.'\' ');
+            $mysql->query('UPDATE ' . prefix . '_eshop_api SET ' . implode(', ', $vnames) . ' WHERE id = \'' . (int)$id . '\' ');
 
-			msg(array('type' => 'info', 'info' => "Токен отредактирован!"));
+            msg(array('type' => 'info', 'info' => "Токен отредактирован!"));
             return list_api();
         }
-
     }
 
     $error_input = '';
@@ -3142,18 +3107,18 @@ function edit_api()
     $tEntry['error'] = $error_input;
     $tEntry['mode'] = "edit";
 
-    $xt = $twig->loadTemplate($tpath['config/add_api'].'config/'.'add_api.tpl');
+    $xt = $twig->loadTemplate($tpath['config/add_api'] . 'config/' . 'add_api.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -3173,7 +3138,7 @@ function del_api()
         return msg(array("type" => "error", "text" => "Ошибка"));
     }
 
-    $mysql->query("DELETE FROM ".prefix."_eshop_api WHERE id = {$id}");
+    $mysql->query("DELETE FROM " . prefix . "_eshop_api WHERE id = {$id}");
     msg(array("type" => "info", "info" => "Токен удален"));
 }
 
@@ -3185,30 +3150,30 @@ function list_payment()
 
     $tVars = array();
 
-    if ($handle = opendir(__DIR__.'/payment')) {
+    if ($handle = opendir(__DIR__ . '/payment')) {
         $blacklist = array('.', '..');
         while (false !== ($file = readdir($handle))) {
             if (!in_array($file, $blacklist)) {
                 $row['name'] = $file;
-                $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_payment&id=".$file."";
+                $row['edit_link'] = "?mod=extra-config&plugin=eshop&action=edit_payment&id=" . $file . "";
                 $tEntry[] = $row;
             }
         }
         closedir($handle);
     }
 
-    $xt = $twig->loadTemplate($tpath['config/list_payment'].'config/'.'list_payment.tpl');
+    $xt = $twig->loadTemplate($tpath['config/list_payment'] . 'config/' . 'list_payment.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -3216,7 +3181,6 @@ function list_payment()
     );
 
     print $xg->render($tVars);
-
 }
 
 function edit_payment()
@@ -3224,7 +3188,7 @@ function edit_payment()
     $tpath = locatePluginTemplates(array('config/main', 'config/add_currencies'), 'eshop', 1);
 
     $id = $_REQUEST['id'];
-    $config_filename = __DIR__.'/payment/'.$id.'/config.php';
+    $config_filename = __DIR__ . '/payment/' . $id . '/config.php';
 
     if (file_exists($config_filename)) {
         include_once($config_filename);
@@ -3232,7 +3196,7 @@ function edit_payment()
     } else {
         $error = "Файл $config_filename не существует";
         msg(array("type" => "error", "text" => $error));
-		return list_payment();
+        return list_payment();
     }
 }
 
@@ -3253,25 +3217,25 @@ function urls()
 
         pluginSetVariable('eshop', 'url', (int)$_REQUEST['url']);
         pluginsSaveConfig();
-		msg(array('type' => 'info', 'info' => "Настройки успешно сохранены"));
+        msg(array('type' => 'info', 'info' => "Настройки успешно сохранены"));
 
         //redirect_eshop('?mod=extra-config&plugin=eshop&action=urls');
     }
 
-    $url = '<option value="0" '.(empty($url) ? 'selected' : '').'>Нет</option><option value="1" '.(!empty($url) ? 'selected' : '').'>Да</option>';
+    $url = '<option value="0" ' . (empty($url) ? 'selected' : '') . '>Нет</option><option value="1" ' . (!empty($url) ? 'selected' : '') . '>Да</option>';
 
-    $xt = $twig->loadTemplate($tpath['config/urls'].'config/'.'urls.tpl');
+    $xt = $twig->loadTemplate($tpath['config/urls'] . 'config/' . 'urls.tpl');
 
     $uVars = array(
         'info' => $url,
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($uVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -3279,7 +3243,6 @@ function urls()
     );
 
     print $xg->render($tVars);
-
 }
 
 
@@ -3293,10 +3256,25 @@ function automation()
 
     if (!empty($yml_url) && isset($_REQUEST['import'])) {
 
-        import_yml($yml_url);
-        //$import_str = implode('<br/>',$_SESSION['import_yml']);
-        //$info = "Импорт YML успешно завершен<br/><br/>".$import_str;
-        $info = "Импорт YML успешно завершен";
+        $import_result = import_yml($yml_url);
+
+        if ($import_result && is_array($import_result)) {
+            // Формируем сообщение для toast
+            $message = "Импорт завершен! ";
+            if ($import_result['added'] > 0) {
+                $message .= "Добавлено: " . $import_result['added'] . " ";
+            }
+            if ($import_result['updated'] > 0) {
+                $message .= "Обновлено: " . $import_result['updated'] . " ";
+            }
+            if (!empty($import_result['warnings'])) {
+                $message .= "Предупреждения: " . implode(', ', $import_result['warnings']);
+            }
+
+            $info = $message;
+        } else {
+            $info = "Импорт YML завершен";
+        }
 
         msg(array("type" => "info", "info" => $info));
     }
@@ -3304,7 +3282,7 @@ function automation()
     if (isset($_REQUEST['currency'])) {
 
         $rates_str = update_currency();
-        $info = "Валюты обновлены<br/><br/>".$rates_str;
+        $info = "Валюты обновлены<br/><br/>" . $rates_str;
 
         msg(array("type" => "info", "info" => $info));
     }
@@ -3323,16 +3301,16 @@ function automation()
         $SUPRESS_TEMPLATE_SHOW = 1;
         $SUPRESS_MAINBLOCK_SHOW = 1;
 
-        require_once __DIR__.'/csv_lib/CsvImportInterface.php';
-        require_once __DIR__.'/csv_lib/CsvImport.php';
-        require_once __DIR__.'/csv_lib/CsvExportInterface.php';
-        require_once __DIR__.'/csv_lib/CsvExport.php';
+        require_once __DIR__ . '/csv_lib/CsvImportInterface.php';
+        require_once __DIR__ . '/csv_lib/CsvImport.php';
+        require_once __DIR__ . '/csv_lib/CsvExportInterface.php';
+        require_once __DIR__ . '/csv_lib/CsvExport.php';
 
         $export = new CsvExport();
 
         $cat_array = array();
 
-        foreach ($mysql->select('SELECT * FROM '.prefix.'_eshop_categories ORDER BY position ASC') as $cat_row) {
+        foreach ($mysql->select('SELECT * FROM ' . prefix . '_eshop_categories ORDER BY position ASC') as $cat_row) {
 
             $catlink = checkLinkAvailable('eshop', '') ?
                 generateLink('eshop', '', array('cat' => $cat_row['id'])) :
@@ -3356,7 +3334,6 @@ function automation()
                 'link' => $catlink,
 
             );
-
         }
 
         $conditions = array();
@@ -3366,38 +3343,38 @@ function automation()
         //$limitCount = "10000";
 
         //$fSort = " GROUP BY p.id ORDER BY p.id DESC ";
-		$fSort = " ORDER BY p.id DESC ";
-        $sqlQPart = "FROM ".prefix."_eshop_products p LEFT JOIN ".prefix."_eshop_products_categories pc ON p.id = pc.product_id LEFT JOIN ".prefix."_eshop_categories c ON pc.category_id = c.id ".(count($conditions) ? "WHERE ".implode(" AND ", $conditions) : '').$fSort;
-        $sqlQ = "SELECT p.id AS id, p.url AS url, p.code AS code, p.name AS name, p.annotation AS annotation, p.body AS body, p.active AS active, p.featured AS featured, p.stocked AS stocked, p.position AS position, p.meta_title AS meta_title, p.meta_keywords AS meta_keywords, p.meta_description AS meta_description, p.date AS date, p.editdate AS editdate, p.views AS views, c.id AS cid, c.name AS category ".$sqlQPart;
+        $fSort = " ORDER BY p.id DESC ";
+        $sqlQPart = "FROM " . prefix . "_eshop_products p LEFT JOIN " . prefix . "_eshop_products_categories pc ON p.id = pc.product_id LEFT JOIN " . prefix . "_eshop_categories c ON pc.category_id = c.id " . (count($conditions) ? "WHERE " . implode(" AND ", $conditions) : '') . $fSort;
+        $sqlQ = "SELECT p.id AS id, p.url AS url, p.code AS code, p.name AS name, p.annotation AS annotation, p.body AS body, p.active AS active, p.featured AS featured, p.stocked AS stocked, p.position AS position, p.meta_title AS meta_title, p.meta_keywords AS meta_keywords, p.meta_description AS meta_description, p.date AS date, p.editdate AS editdate, p.views AS views, c.id AS cid, c.name AS category " . $sqlQPart;
 
         $entries = array();
 
         foreach ($mysql->select($sqlQ) as $row) {
 
             $entriesImg = array();
-            foreach ($mysql->select('SELECT * FROM '.prefix.'_eshop_images i WHERE i.product_id = '.$row['id'].' ') as $row2) {
+            foreach ($mysql->select('SELECT * FROM ' . prefix . '_eshop_images i WHERE i.product_id = ' . $row['id'] . ' ') as $row2) {
                 $entriesImg[] = $row2['filepath'];
             }
 
             $entriesVariants = array();
-            foreach ($mysql->select('SELECT * FROM '.prefix.'_eshop_variants v WHERE v.product_id = '.$row['id'].' ') as $vrow) {
+            foreach ($mysql->select('SELECT * FROM ' . prefix . '_eshop_variants v WHERE v.product_id = ' . $row['id'] . ' ') as $vrow) {
                 $entriesVariants[] = $vrow;
             }
 
             $options_array = array();
-            foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_options LEFT JOIN ".prefix."_eshop_features ON ".prefix."_eshop_features.id=".prefix."_eshop_options.feature_id WHERE ".prefix."_eshop_options.product_id = ".$row['id']." ORDER BY position, id") as $orow) {
+            foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_options LEFT JOIN " . prefix . "_eshop_features ON " . prefix . "_eshop_features.id=" . prefix . "_eshop_options.feature_id WHERE " . prefix . "_eshop_options.product_id = " . $row['id'] . " ORDER BY position, id") as $orow) {
                 $options_array[$orow['id']] = $orow['value'];
             }
 
             $xf_name_id = array();
             $features_array = array();
-            foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_features ORDER BY position, id") as $frow) {
+            foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_features ORDER BY position, id") as $frow) {
                 $frow['value'] = $options_array[$frow['id']];
                 $frow['foptions'] = json_decode($frow['foptions'], true);
                 foreach ($frow['foptions'] as $key => $value) {
                     $frow['foptions'][$key] = iconv("utf-8", "windows-1251", $value);
                 }
-                $features_array["xfields_".$frow['name']] = $frow['value'];
+                $features_array["xfields_" . $frow['name']] = $frow['value'];
                 $xf_name_id[$frow['name']] = $frow['id'];
             }
 
@@ -3438,7 +3415,6 @@ function automation()
             }
 
             $entries[] = $entry;
-
         }
 
         $count = 0;
@@ -3469,7 +3445,6 @@ function automation()
                 );
 
                 unset($entry_row);
-
             }
         }
 
@@ -3484,20 +3459,27 @@ function automation()
 
         if (is_uploaded_file($_FILES["filename"]["tmp_name"])) {
 
-            require_once __DIR__.'/csv_lib/CsvImportInterface.php';
-            require_once __DIR__.'/csv_lib/CsvImport.php';
-            require_once __DIR__.'/csv_lib/CsvExportInterface.php';
-            require_once __DIR__.'/csv_lib/CsvExport.php';
+            require_once __DIR__ . '/csv_lib/CsvImportInterface.php';
+            require_once __DIR__ . '/csv_lib/CsvImport.php';
+            require_once __DIR__ . '/csv_lib/CsvExportInterface.php';
+            require_once __DIR__ . '/csv_lib/CsvExport.php';
 
             $import = new CsvImport();
 
-            $filepath = __DIR__."/import/".$_FILES["filename"]["name"];
+            $filepath = __DIR__ . "/import/" . $_FILES["filename"]["name"];
             move_uploaded_file($_FILES["filename"]["tmp_name"], $filepath);
             $import->setFile($filepath, 10000, ";");
             $items = $import->getRows();
 
+            // Инициализируем счетчики для статистики
+            $csv_stats = array(
+                'added' => 0,
+                'updated' => 0,
+                'total' => count($items)
+            );
+
             $xf_name_id = array();
-            foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_features ORDER BY position, id") as $frow) {
+            foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_features ORDER BY position, id") as $frow) {
                 $xf_name_id[$frow['name']] = $frow['id'];
             }
 
@@ -3534,7 +3516,7 @@ function automation()
                 $editdate = empty($iv['editdate']) ? $current_time : $iv['editdate'];
                 $cat_name = empty($iv['cat_name']) ? "" : $iv['cat_name'];
                 $cid = empty($iv['cid']) ? "0" : $iv['cid'];
-                $images = explode(',',$iv['images']);
+                $images = explode(',', $iv['images']);
 
                 $xfields_items = array();
                 foreach ($iv as $xfk => $xfv) {
@@ -3544,27 +3526,28 @@ function automation()
                         $xf_id = $xf_name_id[$xf_name];
                         $xfields_items[$xf_id] = $xfv;
                     }
-
                 }
 
                 if ($iv['id'] != "") {
 
-                    $product_row = $mysql->record("SELECT * FROM ".prefix."_eshop_products WHERE id=".db_squote($iv['id'])." ");
+                    $product_row = $mysql->record("SELECT * FROM " . prefix . "_eshop_products WHERE id=" . db_squote($iv['id']) . " ");
 
                     if (empty($product_row)) {
                         if ($url != "") {
                             if (!is_array(
-                                $mysql->record("SELECT id FROM ".prefix."_eshop_products WHERE url = ".db_squote($product_row["url"])." LIMIT 1"))) {
-                                $mysql->query("INSERT INTO ".prefix."_eshop_products (`id`, `code`, `url`, `name`, `annotation`, `body`, `active`, `featured`, `stocked`, `meta_title`, `meta_keywords`, `meta_description`, `date`, `editdate`) VALUES ('$id','$code','$url','$name','$annotation','$body','$active','$featured','$stocked','$meta_title','$meta_keywords','$meta_description','$date','$editdate')");
+                                $mysql->record("SELECT id FROM " . prefix . "_eshop_products WHERE url = " . db_squote($product_row["url"]) . " LIMIT 1")
+                            )) {
+                                $mysql->query("INSERT INTO " . prefix . "_eshop_products (`id`, `code`, `url`, `name`, `annotation`, `body`, `active`, `featured`, `stocked`, `meta_title`, `meta_keywords`, `meta_description`, `date`, `editdate`) VALUES ('$id','$code','$url','$name','$annotation','$body','$active','$featured','$stocked','$meta_title','$meta_keywords','$meta_description','$date','$editdate')");
 
-								$qid = lastid('eshop_products');
-								
+                                $qid = lastid('eshop_products');
+                                $csv_stats['added']++;
+
                                 import_upload_images($qid);
 
                                 if (!empty($xfields_items)) {
                                     foreach ($xfields_items as $f_key => $f_value) {
                                         if ($f_value != '') {
-                                            $mysql->query("INSERT INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
+                                            $mysql->query("INSERT INTO " . prefix . "_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
                                         }
                                     }
                                 }
@@ -3572,20 +3555,21 @@ function automation()
                                 $category_id = (int)$cid;
 
                                 if ($category_id != 0) {
-                                    $mysql->query("INSERT INTO ".prefix."_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
+                                    $mysql->query("INSERT INTO " . prefix . "_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
                                 }
 
-                                $mysql->query("INSERT INTO ".prefix."_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `stock`, `amount`) VALUES ('$qid', '$v_sku', '$v_name', '$v_price', '$v_compare_price', '$v_stock', '$v_amount')");
-
+                                $mysql->query("INSERT INTO " . prefix . "_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `stock`, `amount`) VALUES ('$qid', '$v_sku', '$v_name', '$v_price', '$v_compare_price', '$v_stock', '$v_amount')");
                             }
                         }
                     } else {
                         if ($product_row["url"]) {
                             if (is_array(
-                                $mysql->record("SELECT id FROM ".prefix."_eshop_products WHERE url = ".db_squote($url)." LIMIT 1"))) {
-                                $mysql->query("REPLACE INTO ".prefix."_eshop_products (`id`, `code`, `url`, `name`, `annotation`, `body`, `active`, `featured`, `stocked`, `meta_title`, `meta_keywords`, `meta_description`, `date`, `editdate`) VALUES ('$id','$code','$url','$name','$annotation','$body','$active','$featured','$stocked','$meta_title','$meta_keywords','$meta_description','$date','$editdate')");
+                                $mysql->record("SELECT id FROM " . prefix . "_eshop_products WHERE url = " . db_squote($url) . " LIMIT 1")
+                            )) {
+                                $mysql->query("REPLACE INTO " . prefix . "_eshop_products (`id`, `code`, `url`, `name`, `annotation`, `body`, `active`, `featured`, `stocked`, `meta_title`, `meta_keywords`, `meta_description`, `date`, `editdate`) VALUES ('$id','$code','$url','$name','$annotation','$body','$active','$featured','$stocked','$meta_title','$meta_keywords','$meta_description','$date','$editdate')");
 
                                 $qid = $product_row["id"];
+                                $csv_stats['updated']++;
 
                                 import_upload_images($qid);
 
@@ -3593,7 +3577,7 @@ function automation()
                                     //$mysql->query("DELETE FROM ".prefix."_eshop_options WHERE product_id='$qid'");
                                     foreach ($xfields_items as $f_key => $f_value) {
                                         if ($f_value != '') {
-                                            $mysql->query("REPLACE INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
+                                            $mysql->query("REPLACE INTO " . prefix . "_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
                                         }
                                     }
                                 }
@@ -3602,9 +3586,9 @@ function automation()
 
                                 if ($category_id != 0) {
                                     //$mysql->query("DELETE FROM ".prefix."_eshop_products_categories WHERE product_id='$qid'");
-                                    $mysql->query("REPLACE INTO ".prefix."_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
+                                    $mysql->query("REPLACE INTO " . prefix . "_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
                                 } else {
-                                    $mysql->query("DELETE FROM ".prefix."_eshop_products_categories WHERE product_id='$qid'");
+                                    $mysql->query("DELETE FROM " . prefix . "_eshop_products_categories WHERE product_id='$qid'");
                                 }
 
                                 $SQLv = array();
@@ -3617,13 +3601,13 @@ function automation()
                                 $SQLv['amount'] = $v_amount;
 
                                 foreach ($SQLv as $k => $v) {
-                                    $vnames[] = $k.' = '.db_squote($v);
+                                    $vnames[] = $k . ' = ' . db_squote($v);
                                 }
 
                                 if ($v_id != "") {
-                                    $mysql->query('UPDATE '.prefix.'_eshop_variants SET '.implode(', ',$vnames).' WHERE id = \''.(int)$v_id.'\'  ');
+                                    $mysql->query('UPDATE ' . prefix . '_eshop_variants SET ' . implode(', ', $vnames) . ' WHERE id = \'' . (int)$v_id . '\'  ');
                                 } else {
-                                    $mysql->query("INSERT INTO ".prefix."_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `stock`, `amount`) VALUES ('$qid', '$v_sku', '$v_name', '$v_price', '$v_compare_price', '$v_stock', '$v_amount')");
+                                    $mysql->query("INSERT INTO " . prefix . "_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `stock`, `amount`) VALUES ('$qid', '$v_sku', '$v_name', '$v_price', '$v_compare_price', '$v_stock', '$v_amount')");
                                 }
 
                                 //$mysql->query("DELETE FROM ".prefix."_eshop_variants WHERE product_id='$qid'");
@@ -3634,16 +3618,17 @@ function automation()
                     }
                 } else {
 
-                    $mysql->query("INSERT INTO ".prefix."_eshop_products (`code`, `url`, `name`, `annotation`, `body`, `active`, `featured`, `stocked`, `meta_title`, `meta_keywords`, `meta_description`, `date`, `editdate`) VALUES ('$code','$url','$name','$annotation','$body','$active','$featured','$stocked','$meta_title','$meta_keywords','$meta_description','$date','$editdate')");
+                    $mysql->query("INSERT INTO " . prefix . "_eshop_products (`code`, `url`, `name`, `annotation`, `body`, `active`, `featured`, `stocked`, `meta_title`, `meta_keywords`, `meta_description`, `date`, `editdate`) VALUES ('$code','$url','$name','$annotation','$body','$active','$featured','$stocked','$meta_title','$meta_keywords','$meta_description','$date','$editdate')");
 
-					$qid = lastid('eshop_products');
+                    $qid = lastid('eshop_products');
+                    $csv_stats['added']++;
 
                     import_upload_images($qid);
 
                     if (!empty($xfields_items)) {
                         foreach ($xfields_items as $f_key => $f_value) {
                             if ($f_value != '') {
-                                $mysql->query("INSERT INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
+                                $mysql->query("INSERT INTO " . prefix . "_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
                             }
                         }
                     }
@@ -3651,25 +3636,34 @@ function automation()
                     $category_id = (int)$cid;
 
                     if ($category_id != 0) {
-                        $mysql->query("INSERT INTO ".prefix."_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
+                        $mysql->query("INSERT INTO " . prefix . "_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
                     }
 
-                    $mysql->query("INSERT INTO ".prefix."_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `stock`, `amount`) VALUES ('$qid', '$v_sku', '$v_name', '$v_price', '$v_compare_price', '$v_stock', '$v_amount')");
-
+                    $mysql->query("INSERT INTO " . prefix . "_eshop_variants (`product_id`, `sku`, `name`, `price`, `compare_price`, `stock`, `amount`) VALUES ('$qid', '$v_sku', '$v_name', '$v_price', '$v_compare_price', '$v_stock', '$v_amount')");
                 }
             }
 
             unlink($filepath);
-            $info = "Импорт CSV завершен<br/>";
+
+            // Формируем сообщение со статистикой
+            $info = "Импорт CSV завершен! ";
+            if (isset($csv_stats)) {
+                $info .= "Обработано товаров: " . $csv_stats['total'];
+                if ($csv_stats['added'] > 0) {
+                    $info .= ", добавлено: " . $csv_stats['added'];
+                }
+                if ($csv_stats['updated'] > 0) {
+                    $info .= ", обновлено: " . $csv_stats['updated'];
+                }
+            }
+
             msg(array("type" => "info", "info" => $info));
             die();
-
         } else {
             $info = "Ошибка загрузки файла<br/>";
             msg(array("type" => "info", "info" => $info));
             die();
         }
-
     }
 
     if (isset($_REQUEST['multiple_upload_images'])) {
@@ -3683,17 +3677,17 @@ function automation()
                 $img_parts = explode(".", $img);
                 $img_s = explode("_", $img_parts[0]);
                 $qid = $img_s[0];
-				//$qid = lastid('eshop_products');
-				
+                //$qid = lastid('eshop_products');
+
                 if ($qid != "") {
 
-                    $prd_row = $mysql->record("SELECT * FROM ".prefix."_eshop_products WHERE id = ".db_squote($qid)." LIMIT 1");
+                    $prd_row = $mysql->record("SELECT * FROM " . prefix . "_eshop_products WHERE id = " . db_squote($qid) . " LIMIT 1");
                     if (!is_array($prd_row)) {
                         break;
                     }
 
                     $positions_img = array();
-                    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_images WHERE product_id = '$qid' ORDER BY position, id") as $irow) {
+                    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_images WHERE product_id = '$qid' ORDER BY position, id") as $irow) {
                         $positions_img[] = $irow['position'];
                     }
 
@@ -3705,27 +3699,24 @@ function automation()
 
                     $inx_img = $max_img_pos;
 
-                    makeUploadsDirs('/eshop/products/'.$qid.'/');
+                    makeUploadsDirs('/eshop/products/' . $qid . '/');
 
                     $timestamp = time();
-                    $iname = $timestamp."-".$img;
+                    $iname = $timestamp . "-" . $img;
 
                     $productsTempPath = '/eshop/products/';
                     moveFromTemp($qid, $productsTempPath, $img, $iname);
 
-                    $mysql->query("INSERT INTO ".prefix."_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$inx_img')");
-					
-					msg(array("type" => "info", "info" => $qid));
-
+                    $mysql->query("INSERT INTO " . prefix . "_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$inx_img')");
                 }
             }
         }
 
-        $info .= "Изображения загружены<br/>";
+        $info .= "Изображения загружены";
         msg(array("type" => "info", "info" => $info));
     }
 
-    $xt = $twig->loadTemplate($tpath['config/automation'].'config/'.'automation.tpl');
+    $xt = $twig->loadTemplate($tpath['config/automation'] . 'config/' . 'automation.tpl');
 
     $yml_export_link = checkLinkAvailable('eshop', 'yml_export') ?
         generateLink('eshop', 'yml_export', array()) :
@@ -3736,12 +3727,12 @@ function automation()
         'info' => '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,
@@ -3749,7 +3740,6 @@ function automation()
     );
 
     print $xg->render($tVars);
-
 }
 
 
@@ -3758,7 +3748,7 @@ function import_upload_images($qid)
     global $mysql, $config;
 
     $positions_img = array();
-    foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_images WHERE product_id = '$qid' ORDER BY position, id") as $irow) {
+    foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_images WHERE product_id = '$qid' ORDER BY position, id") as $irow) {
         $positions_img[] = $irow['position'];
     }
 
@@ -3771,17 +3761,17 @@ function import_upload_images($qid)
     $inx_img = $max_img_pos;
 
     $uploadsDir = dirname($config['images_dir']);
-    $img_dir = __DIR__."/import/images/".$qid."/";
-    $images = array_map('basename', glob($img_dir."*.{jpg,png,gif}", GLOB_BRACE));
+    $img_dir = __DIR__ . "/import/images/" . $qid . "/";
+    $images = array_map('basename', glob($img_dir . "*.{jpg,png,gif}", GLOB_BRACE));
 
     if (!empty($images)) {
 
         foreach ($images as $name) {
 
-            $file_path = $uploadsDir."/eshop/products/temp/".$name;
-            rename($img_dir.$name, $file_path);
+            $file_path = $uploadsDir . "/eshop/products/temp/" . $name;
+            rename($img_dir . $name, $file_path);
             $fileParts = pathinfo($file_path);
-            $extension = $fileParts ['extension'];
+            $extension = $fileParts['extension'];
 
             $extensions = array_map('trim', explode(',', pluginGetVariable('eshop', 'ext_image')));
 
@@ -3802,7 +3792,7 @@ function import_upload_images($qid)
                 }
             }
 
-            list ($width, $height) = getimagesize($file_path);
+            list($width, $height) = getimagesize($file_path);
 
             $newwidth = pluginGetVariable('eshop', 'width_thumb');
 
@@ -3852,7 +3842,7 @@ function import_upload_images($qid)
                     }
                 }
 
-                list ($width, $height) = getimagesize($file_path);
+                list($width, $height) = getimagesize($file_path);
                 $newheight = ($height / $width) * $newwidth;
                 $tmp = imagecreatetruecolor($newwidth, $newheight);
                 imagecopyresampled($tmp, $src, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
@@ -3863,26 +3853,23 @@ function import_upload_images($qid)
 
                 imagedestroy($src);
                 imagedestroy($tmp);
-
             }
 
             $img = $name;
 
             $timestamp = time();
-            $iname = $timestamp."-".$img;
+            $iname = $timestamp . "-" . $img;
 
-            makeUploadsDirs('/eshop/products/'.$qid.'/');
+            makeUploadsDirs('/eshop/products/' . $qid . '/');
 
             $productsTempPath = '/eshop/products/';
             moveFromTemp($qid, $productsTempPath, $img, $iname);
 
-            $mysql->query("INSERT INTO ".prefix."_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$inx_img')");
+            $mysql->query("INSERT INTO " . prefix . "_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$inx_img')");
 
             $inx_img += 1;
         }
-
     }
-
 }
 
 function options()
@@ -3894,12 +3881,12 @@ function options()
     $tVars = array();
 
     if (isset($_REQUEST['submit'])) {
-		pluginSetVariable('eshop', 'localsource', (int)$_REQUEST['localsource']);
-		pluginSetVariable('eshop', 'localskin', secure_html(trim($_REQUEST['localskin'])));
-		
+        pluginSetVariable('eshop', 'localsource', (int)$_REQUEST['localsource']);
+        pluginSetVariable('eshop', 'localskin', secure_html(trim($_REQUEST['localskin'])));
+
         pluginSetVariable('eshop', 'mysql', (int)$_REQUEST['mysql']);
-		pluginSetVariable('eshop', 'cat_tree', (int)$_REQUEST['cat_tree']);
-		pluginSetVariable('eshop', 'count', (int)$_REQUEST['count']);
+        pluginSetVariable('eshop', 'cat_tree', (int)$_REQUEST['cat_tree']);
+        pluginSetVariable('eshop', 'count', (int)$_REQUEST['count']);
         pluginSetVariable('eshop', 'count_search', secure_html($_REQUEST['count_search']));
         pluginSetVariable('eshop', 'count_stocks', secure_html($_REQUEST['count_stocks']));
 
@@ -3934,9 +3921,9 @@ function options()
         pluginSetVariable('eshop', 'description_phones', $_REQUEST['description_phones']);
 
         pluginsSaveConfig();
-		msg(array('type' => 'info', 'info' => "Настройки успешно сохранены"));
-		
-		//redirect_eshop('?mod=extra-config&plugin=eshop&action=options');
+        msg(array('type' => 'info', 'info' => "Настройки успешно сохранены"));
+
+        //redirect_eshop('?mod=extra-config&plugin=eshop&action=options');
     }
 
     $views_cnt = (int)pluginGetVariable('eshop', 'views_count');
@@ -3976,19 +3963,19 @@ function options()
     $count_stocks = pluginGetVariable('eshop', 'count_stocks');
 
     $views_count = pluginGetVariable('eshop', 'views_count');
-    $views_count = '<option value="0" '.($views_count == 0 ? 'selected' : '').'>Нет</option><option value="1" '.($views_count == 1 ? 'selected' : '').'>Да</option><option value="2" '.($views_count == 2 ? 'selected' : '').'>Отложенное</option>';
+    $views_count = '<option value="0" ' . ($views_count == 0 ? 'selected' : '') . '>Нет</option><option value="1" ' . ($views_count == 1 ? 'selected' : '') . '>Да</option><option value="2" ' . ($views_count == 2 ? 'selected' : '') . '>Отложенное</option>';
 
     $bidirect_linked_products = pluginGetVariable('eshop', 'bidirect_linked_products');
-    $bidirect_linked_products = '<option value="0" '.($bidirect_linked_products == 0 ? 'selected' : '').'>Нет</option><option value="1" '.($bidirect_linked_products == 1 ? 'selected' : '').'>Да</option>';
+    $bidirect_linked_products = '<option value="0" ' . ($bidirect_linked_products == 0 ? 'selected' : '') . '>Нет</option><option value="1" ' . ($bidirect_linked_products == 1 ? 'selected' : '') . '>Да</option>';
 
     $approve_comments = pluginGetVariable('eshop', 'approve_comments');
-    $approve_comments = '<option value="0" '.($approve_comments == 0 ? 'selected' : '').'>Нет</option><option value="1" '.($approve_comments == 1 ? 'selected' : '').'>Да</option>';
+    $approve_comments = '<option value="0" ' . ($approve_comments == 0 ? 'selected' : '') . '>Нет</option><option value="1" ' . ($approve_comments == 1 ? 'selected' : '') . '>Да</option>';
 
     $sort_comments = pluginGetVariable('eshop', 'sort_comments');
-    $sort_comments = '<option value="0" '.($sort_comments == 0 ? 'selected' : '').'>Новые снизу</option><option value="1" '.($sort_comments == 1 ? 'selected' : '').'>Новые сверху</option>';
+    $sort_comments = '<option value="0" ' . ($sort_comments == 0 ? 'selected' : '') . '>Новые снизу</option><option value="1" ' . ($sort_comments == 1 ? 'selected' : '') . '>Новые сверху</option>';
 
     $integrate_gsmg = pluginGetVariable('eshop', 'integrate_gsmg');
-    $integrate_gsmg = '<option value="0" '.($integrate_gsmg == 0 ? 'selected' : '').'>Нет</option><option value="1" '.($integrate_gsmg == 1 ? 'selected' : '').'>Да</option>';
+    $integrate_gsmg = '<option value="0" ' . ($integrate_gsmg == 0 ? 'selected' : '') . '>Нет</option><option value="1" ' . ($integrate_gsmg == 1 ? 'selected' : '') . '>Да</option>';
 
     $max_image_size = pluginGetVariable('eshop', 'max_image_size');
     $width_thumb = pluginGetVariable('eshop', 'width_thumb');
@@ -4013,27 +4000,27 @@ function options()
     $description_order = pluginGetVariable('eshop', 'description_order');
     $description_phones = pluginGetVariable('eshop', 'description_phones');
 
-	if (pluginGetVariable('eshop', 'localsource'))
-		$localskin = extras_dir . '/eshop/tpl/skins/';
-	else {
-		if (file_exists(tpl_site . 'plugins/eshop/skins/'))
-			$localskin = tpl_site . 'plugins/eshop/skins/';
-		else {
-			$localskin = extras_dir . '/eshop/tpl/skins/';
-			//msg(array("type" => "error", "text" => 'Ошибка поддержки скина. Надо выбрать шаблон: Плагин. Чтобы использовать предустановленные скины eshop'));
-		}
-	}
-	
-    $tEntry = array(
-		'localsource'   => MakeDropDown(array(0 => 'Шаблон сайта', 1 => 'Плагина'), 'localsource', (int)pluginGetVariable('eshop', 'localsource')),
-		'localskin'     => MakeDropDown(ListFiles($localskin, ''), 'localskin', pluginGetVariable('eshop', 'localskin')),
-		'mysql'   		=> MakeDropDown(array(0 => 'Нет', 1 => 'Да'), 'mysql', (int)pluginGetVariable('eshop', 'mysql')),
-		'cat_tree'   		=> MakeDropDown(array(0 => 'Нет', 1 => 'Да'), 'cat_tree', (int)pluginGetVariable('eshop', 'cat_tree')),
-        'count' 		=> $count,
-        'count_search' 	=> $count_search,
-        'count_stocks' 	=> $count_stocks,
+    if (pluginGetVariable('eshop', 'localsource'))
+        $localskin = extras_dir . '/eshop/tpl/skins/';
+    else {
+        if (file_exists(tpl_site . 'plugins/eshop/skins/'))
+            $localskin = tpl_site . 'plugins/eshop/skins/';
+        else {
+            $localskin = extras_dir . '/eshop/tpl/skins/';
+            //msg(array("type" => "error", "text" => 'Ошибка поддержки скина. Надо выбрать шаблон: Плагин. Чтобы использовать предустановленные скины eshop'));
+        }
+    }
 
-        'views_count' 	=> $views_count,
+    $tEntry = array(
+        'localsource'   => MakeDropDown(array(0 => 'Шаблон сайта', 1 => 'Плагина'), 'localsource', (int)pluginGetVariable('eshop', 'localsource')),
+        'localskin'     => MakeDropDown(ListFiles($localskin, ''), 'localskin', pluginGetVariable('eshop', 'localskin')),
+        'mysql'           => MakeDropDown(array(0 => 'Нет', 1 => 'Да'), 'mysql', (int)pluginGetVariable('eshop', 'mysql')),
+        'cat_tree'           => MakeDropDown(array(0 => 'Нет', 1 => 'Да'), 'cat_tree', (int)pluginGetVariable('eshop', 'cat_tree')),
+        'count'         => $count,
+        'count_search'     => $count_search,
+        'count_stocks'     => $count_stocks,
+
+        'views_count'     => $views_count,
         'bidirect_linked_products' => $bidirect_linked_products,
 
         'approve_comments' => $approve_comments,
@@ -4065,18 +4052,18 @@ function options()
 
     );
 
-    $xt = $twig->loadTemplate($tpath['config/general.from'].'config/'.'general.from.tpl');
+    $xt = $twig->loadTemplate($tpath['config/general.from'] . 'config/' . 'general.from.tpl');
 
     $tVars = array(
         'entries' => isset($tEntry) ? $tEntry : '',
     );
 
-    $xg = $twig->loadTemplate($tpath['config/main'].'config/'.'main.tpl');
+    $xg = $twig->loadTemplate($tpath['config/main'] . 'config/' . 'main.tpl');
 
     $tVars = array(
         'entries' => $xt->render($tVars),
         'php_self' => $_SERVER['PHP_SELF'],
-        'plugin_url' => admin_url.'/admin.php?mod=extra-config&plugin=eshop',
+        'plugin_url' => admin_url . '/admin.php?mod=extra-config&plugin=eshop',
         'skins_url' => skins_url,
         'admin_url' => admin_url,
         'home' => home,

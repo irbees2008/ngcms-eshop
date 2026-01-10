@@ -19,7 +19,6 @@
 	<!-- /.row -->
 </div>
 <!-- /.container-fluid -->
-
 <div class="input-group mb-3">
 	<input type="text" id="searchInput" class="form-control" placeholder="{{ lang['extras.search'] }}">
 	<div class="input-group-append">
@@ -28,7 +27,6 @@
 		</span>
 	</div>
 </div>
-
 <div
 	class="container">
 	<!-- Фильтр -->
@@ -54,54 +52,51 @@
 			</a>
 		</li>
 	</ul>
-
 	<!-- Карточки плагинов -->
 	<div class="row" id="plugin-list">
 		{% for entry in entries %}
 			<div class="col-md-6 col-lg-4 mb-4 plugin-card {{ entry.style }}" data-status="{{ entry.status }}">
-<div class="card border-dark">
-	<div class="card-header">
-		<h5 class="card-title">
-{{ entry.id }}
--
-{{ entry.title }}
-
-			<span class="badge badge-secondary float-right">{{ entry.version }}</span>
-		</h5>
-	</div>
-	<div
-		class="card-body">
-		<!-- Блок с иконкой -->
-		<div class="card-icon">
-		{{ entry.icons }}
-		</div>
-		<p class="card-text">{{ entry.description }}</p>
-		<span class="badge badge-{{ entry.flags.isCompatible ? 'success' : 'warning' }}">
-			{{ entry.flags.isCompatible ? 'Совместим' : 'Не совместим' }}
-		</span>
-		<!-- Дополнительные ссылки (readme, history) -->
-		<div class="mt-2">
-			{% if entry.readme %}
-				<a href="#" class="mr-2 open-modal" data-toggle="modal" data-target="#readmeModal" data-url="{{ entry.readme }}" title="{{ lang['entry.readme'] }}">
-					<i class="fa fa-book"></i>
-					{{ lang['entry.readme'] }}
-				</a>
-			{% endif %}
-			{% if entry.history %}
-				<a href="#" class="open-modal" data-toggle="modal" data-target="#historyModal" data-url="{{ entry.history }}" title="{{ lang['entry.history'] }}">
-					<i class="fa fa-clock-o"></i>
-					{{ lang['entry.history'] }}
-				</a>
-			{% endif %}
-		</div>
-	</div>
-	<div class="card-footer text-muted">
-		{{ entry.url }}
-		{{ entry.link }}
-		{{ entry.install }}
-	</div>
-</div>
-
+				<div class="card border-dark">
+					<div class="card-header">
+						<h5 class="card-title">
+							{{ entry.id }}
+							-
+							{{ entry.title }}
+							<span class="badge badge-secondary float-right">{{ entry.version }}</span>
+						</h5>
+					</div>
+					<div
+						class="card-body">
+						<!-- Блок с иконкой -->
+						<div class="card-icon">
+							{{ entry.icons }}
+						</div>
+						<p class="card-text">{{ entry.description }}</p>
+						<span class="badge badge-{{ entry.flags.isCompatible ? 'success' : 'warning' }}">
+							{{ entry.flags.isCompatible ? 'Совместим' : 'Не совместим' }}
+						</span>
+						<!-- Дополнительные ссылки (readme, history) -->
+						<div class="mt-2">
+							{% if entry.readme %}
+								<a href="#" class="mr-2 open-modal" data-toggle="modal" data-target="#readmeModal" data-url="{{ entry.readme }}" title="{{ lang['entry.readme'] }}">
+									<i class="fa fa-book"></i>
+									{{ lang['entry.readme'] }}
+								</a>
+							{% endif %}
+							{% if entry.history %}
+								<a href="#" class="open-modal" data-toggle="modal" data-target="#historyModal" data-url="{{ entry.history }}" title="{{ lang['entry.history'] }}">
+									<i class="fa fa-clock-o"></i>
+									{{ lang['entry.history'] }}
+								</a>
+							{% endif %}
+						</div>
+					</div>
+					<div class="card-footer text-muted">
+						{{ entry.url }}
+						{{ entry.link }}
+						{{ entry.install }}
+					</div>
+				</div>
 			</div>
 		{% endfor %}
 	</div>
@@ -125,7 +120,6 @@
 		</div>
 	</div>
 </div>
-
 <!-- Модальное окно для истории -->
 <div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
 	<div class="modal-dialog modal-lg" role="document">
@@ -145,7 +139,6 @@
 		</div>
 	</div>
 </div>
-
 <script>
 	document.addEventListener('DOMContentLoaded', function () { // Обработчик для README
 const readmeLinks = document.querySelectorAll('.open-modal[data-target="#readmeModal"]');
@@ -155,7 +148,6 @@ const url = this.getAttribute('data-url');
 document.getElementById('readmeContent').src = url;
 });
 });
-
 // Обработчик для истории
 const historyLinks = document.querySelectorAll('.open-modal[data-target="#historyModal"]');
 historyLinks.forEach(link => {
@@ -164,21 +156,17 @@ const url = this.getAttribute('data-url');
 document.getElementById('historyContent').src = url;
 });
 });
-});
-document.addEventListener('DOMContentLoaded', function () { // Получаем элементы интерфейса
+// --- Фильтр вкладок ---
 const filterButtons = document.querySelectorAll('.nav-tabs .nav-link');
 const pluginCards = document.querySelectorAll('.plugin-card');
-
-// Функция для сохранения выбранного фильтра в localStorage
 function saveSelectedFilter(filter) {
 localStorage.setItem('selectedFilter', filter);
 }
-
-// Функция для получения сохраненного фильтра из localStorage
 function getSavedFilter() {
-return localStorage.getItem('selectedFilter') || 'pluginEntryActive'; // По умолчанию "активные"
+return localStorage.getItem('selectedFilter') || 'pluginEntryActive';
 }
-
+// Сначала убрать active у всех вкладок
+filterButtons.forEach(btn => btn.classList.remove('active'));
 // Применяем сохраненный фильтр при загрузке страницы
 const savedFilter = getSavedFilter();
 const activeButton = document.querySelector(`.nav-tabs .nav-link[data-filter="${savedFilter}"]`);
@@ -192,27 +180,17 @@ defaultButton.classList.add('active');
 filterCards('pluginEntryActive');
 }
 }
-
 // Обработчик кликов по вкладкам
 filterButtons.forEach(button => {
 button.addEventListener('click', function (e) {
 e.preventDefault();
-
-// Убираем класс 'active' у всех кнопок
 filterButtons.forEach(btn => btn.classList.remove('active'));
 this.classList.add('active');
-
 const filter = this.dataset.filter;
-
-// Сохраняем выбранный фильтр
 saveSelectedFilter(filter);
-
-// Фильтруем карточки
 filterCards(filter);
 });
 });
-
-// Функция для фильтрации карточек
 function filterCards(filter) {
 pluginCards.forEach(card => {
 if (filter === 'all' || card.classList.contains(filter)) {
@@ -222,7 +200,6 @@ card.style.display = 'none';
 }
 });
 }
-
 // Поиск по названию плагина
 const searchInput = document.getElementById('searchInput');
 if (searchInput) {

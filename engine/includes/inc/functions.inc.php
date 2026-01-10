@@ -1,6 +1,6 @@
 <?php
 //
-// Copyright (C) 2006-2016 Next Generation CMS (http://ngcms.ru/)
+// Copyright (C) 2006-2016 Next Generation CMS (http://ngcms.org/)
 // Name: functions.php
 // Description: Common system functions
 // Author: Vitaly Ponomarev, Alexey Zinchenko
@@ -390,10 +390,16 @@ function msg($params, $mode = 0, $disp = -1)
     if ($mode === 1) {
         $stickerText = '';
         $stickerType = '';
+        $isHtml = false;
         if (isset($params['text']) && !empty($params['text'])) {
             $stickerText = $params['text'];
+            if (isset($params['info']) && !empty($params['info'])) {
+                $stickerText .= '<br>' . $params['info'];
+                $isHtml = true;
+            }
         } elseif (isset($params['info']) && !empty($params['info'])) {
             $stickerText = $params['info'];
+            $isHtml = true;
         }
         if (isset($params['type']) && in_array($params['type'], ['error', 'info'])) {
             $stickerType = $params['type'];
@@ -401,10 +407,56 @@ function msg($params, $mode = 0, $disp = -1)
         return msgSticker(
             $stickerText,
             $stickerType,
-            $disp
+            $disp,
+            $isHtml
         );
     }
-    // Choose working mode
+    // SITE mode: render as stickers similar to admin's notify, except when caller explicitly requests return (disp=2)
+    if ($mode !== 1) {
+        // For disp=2 keep old behavior: return inline HTML fragment
+        if ($disp === 2) {
+            // Choose working mode for legacy inline message
+            $type = 'msg.common';
+            switch (getIsSet($params['type'])) {
+                case 'error':
+                    $type = 'msg.error' . (isset($params['info']) ? '_info' : '');
+                    break;
+                case 'info':
+                    $type = 'msg.info';
+                    break;
+                default:
+                    $type = 'msg.common' . (isset($params['info']) ? '_info' : '');
+                    break;
+            }
+            $tmvars = [
+                'vars' => [
+                    'text' => isset($params['text']) ? $params['text'] : '',
+                    'info' => isset($params['info']) ? $params['info'] : '',
+                ],
+            ];
+            return $tpl->vars($TemplateCache['site']['#variables']['messages'][$type], $tmvars, ['inline' => true]);
+        }
+        // Otherwise produce site sticker notification
+        $stickerText = '';
+        $stickerType = '';
+        $isHtml = false;
+        if (isset($params['text']) && !empty($params['text'])) {
+            $stickerText = $params['text'];
+            if (isset($params['info']) && !empty($params['info'])) {
+                $stickerText .= '<br>' . $params['info'];
+                $isHtml = true;
+            }
+        } elseif (isset($params['info']) && !empty($params['info'])) {
+            $stickerText = $params['info'];
+            $isHtml = true;
+        }
+        if (isset($params['type']) && in_array($params['type'], ['error', 'info'])) {
+            $stickerType = $params['type'];
+        }
+        return msgStickerSite($stickerText, $stickerType, $disp, $isHtml);
+    }
+    // ADMIN mode legacy (non-sticker) is not used; admin path handled above by msgSticker()
+    // Keep fallback for completeness, though it shouldn't be hit due to early return in admin branch.
     $type = 'msg.common';
     switch (getIsSet($params['type'])) {
         case 'error':
@@ -423,24 +475,11 @@ function msg($params, $mode = 0, $disp = -1)
             'info' => isset($params['info']) ? $params['info'] : '',
         ],
     ];
-    $message = $tpl->vars($TemplateCache[$mode ? 'admin' : 'site']['#variables']['messages'][$type], $tmvars, ['inline' => true]);
-    switch ($disp) {
-        case 0:
-            $template['vars']['mainblock'] .= $message;
-            break;
-        case 1:
-            print $message;
-            break;
-        case 2:
-            return $message;
-        default:
-            if ($PHP_SELF == 'admin.php') {
-                $notify .= $message;
-            } else {
-                $template['vars']['mainblock'] .= $message;
-            }
-            break;
+    $message = $tpl->vars($TemplateCache['admin']['#variables']['messages'][$type], $tmvars, ['inline' => true]);
+    if ($disp === 2) {
+        return $message;
     }
+    $notify .= $message;
 }
 // Generate popup sticker with information block
 // $msg - Message to display
@@ -456,18 +495,60 @@ function msgSticker($msg, $type = '', $disp = -1)
 {
     global $notify, $twig;
     $lines = [];
+    $isHtml = false;
+    // Новый параметр $isHtml (4-й аргумент)
+    $args = func_get_args();
+    if (isset($args[3])) {
+        $isHtml = $args[3];
+    }
     if (is_array($msg)) {
         foreach ($msg as $x) {
             $txt = (isset($x[2]) && ($x[2])) ? $x[0] : htmlspecialchars($x[0], ENT_COMPAT | ENT_HTML401, 'UTF-8');
             $lines[] = (isset($x[1]) && ($x[1] == 'title')) ? ('<b>' . $txt . '</b>') : $txt;
         }
+        $message = implode('<br/>', $lines);
     } else {
-        $lines[] = htmlspecialchars($msg, ENT_COMPAT | ENT_HTML401, 'UTF-8');
+        $message = $isHtml ? $msg : htmlspecialchars($msg, ENT_COMPAT | ENT_HTML401, 'UTF-8');
     }
     $notify .= $twig->render(tpl_actions . 'sticker.tpl', [
-        'message' => implode('<br/>', $lines),
+        'message' => $message,
         'type'    => $type,
     ]);
+}
+// Generate site popup sticker (frontend) with information block, similar to admin notify
+// $msg - text or array like in msgSticker
+// $type - '' | 'error' | 'info'
+// $disp - ignored here; kept for signature compatibility
+function msgStickerSite($msg, $type = '', $disp = -1)
+{
+    global $notify, $template;
+    $lines = [];
+    $isHtml = false;
+    $args = func_get_args();
+    if (isset($args[3])) {
+        $isHtml = $args[3];
+    }
+    if (is_array($msg)) {
+        foreach ($msg as $x) {
+            $txt = (isset($x[2]) && ($x[2])) ? $x[0] : htmlspecialchars($x[0], ENT_COMPAT | ENT_HTML401, 'UTF-8');
+            $lines[] = (isset($x[1]) && ($x[1] == 'title')) ? ('<b>' . $txt . '</b>') : $txt;
+        }
+        $message = implode('<br/>', $lines);
+    } else {
+        $message = $isHtml ? $msg : htmlspecialchars($msg, ENT_COMPAT | ENT_HTML401, 'UTF-8');
+    }
+    // Используем notify.js (showToast) если он подключен. Иначе – безопасный fallback (noscript + простой блок).
+    $jsMessage = json_encode($message, JSON_UNESCAPED_UNICODE);
+    $jsType = ($type === 'error') ? 'error' : (($type === 'info') ? 'info' : '');
+    $fallbackHtml = '<div style="background:' . (($type === 'error') ? '#f8d7da' : '#d1ecf1') . ';color:' . (($type === 'error') ? '#721c24' : '#0c5460') . ';border:1px solid ' . (($type === 'error') ? '#f5c6cb' : '#bee5eb') . ';padding:10px;margin:10px;border-radius:4px;">' . $message . '</div>';
+    $script = "\n<noscript>\n{$fallbackHtml}\n</noscript>\n" .
+        '<script>(function(){function exec(){try{if(window.showToast){window.showToast(' . $jsMessage . ', {type: ' . json_encode($jsType) . '});}else{var d=document.createElement("div");d.style.position="fixed";d.style.top="12px";d.style.right="12px";d.style.zIndex=2147483647;var b=document.createElement("div");b.style.background=' . json_encode(($type === 'error') ? '#f8d7da' : '#d1ecf1') . ';b.style.border="1px solid ' . (($type === 'error') ? '#f5c6cb' : '#bee5eb') . '";b.style.color=' . json_encode(($type === 'error') ? '#721c24' : '#0c5460') . ';b.style.padding="10px 14px";b.style.marginTop="10px";b.style.borderRadius="4px";b.style.boxShadow="0 2px 8px rgba(0,0,0,.1)";b.style.maxWidth="420px";b.style.minWidth="260px";b.style.fontSize="14px";b.style.lineHeight="1.4";b.innerHTML=' . $jsMessage . ';d.appendChild(b);document.body.appendChild(d);setTimeout(function(){if(b&&b.parentNode){b.parentNode.removeChild(b)}},' . (($type === 'error') ? 8000 : 5000) . ');} }catch(e){/* noop */}} function run(){setTimeout(exec,150);} if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();</script>';
+    $notify .= $script;
+    // Продублируем в Twig-переменную, чтобы {{ notify|raw }} отрисовал даже если движок не прокидывает $notify автоматически
+    if (!isset($template['vars']['notify'])) {
+        $template['vars']['notify'] = '';
+    }
+    $template['vars']['notify'] .= $script;
 }
 function TwigEngineMSG($type, $text, $info = '')
 {
@@ -1141,15 +1222,15 @@ function generateCategoryMenu($treeMasterCategory = null, $flags = [])
                 }
             }
             // Формируем данные иконки как в makeCategoryInfo()
-           // $iconData = null;
-           // if ($v['icon_id'] && $v['icon_folder']) {
-           //     $iconData = [
-           //         'url' => $config['attach_url'] . '/' . $v['icon_folder'] . '/' . $v['icon_name'],
-           //         'purl'       => $v['icon_preview'] ? ($config['attach_url'] . '/' . $v['icon_folder'] . '/thumb/' . $v['icon_name']) : '',
-           //         'isExtended' => true,
-           //         'hasPreview' => $v['icon_preview'] ? true : false,
-           //     ];
-           // } elseif ($v['icon']) {
+            // $iconData = null;
+            // if ($v['icon_id'] && $v['icon_folder']) {
+            //     $iconData = [
+            //         'url' => $config['attach_url'] . '/' . $v['icon_folder'] . '/' . $v['icon_name'],
+            //         'purl'       => $v['icon_preview'] ? ($config['attach_url'] . '/' . $v['icon_folder'] . '/thumb/' . $v['icon_name']) : '',
+            //         'isExtended' => true,
+            //         'hasPreview' => $v['icon_preview'] ? true : false,
+            //     ];
+            // } elseif ($v['icon']) {
             //    $iconData = [
             //        'url'        => $v['icon'],
             //        'isExtended' => false,
@@ -1164,7 +1245,7 @@ function generateCategoryMenu($treeMasterCategory = null, $flags = [])
                 'level'   => $v['poslevel'],
                 'info'    => $v['info'],
                 'counter' => $v['posts'],
-                'icon'    => $v['icon'] ,  //$iconData, // ← Теперь с правильными данными
+                'icon'    => $v['icon'],  //$iconData, // ← Теперь с правильными данными
                 'flags'   => [
                     'active'  => (isset($SYSTEM_FLAGS['news']['currentCategory.id']) && ($v['id'] == $SYSTEM_FLAGS['news']['currentCategory.id'])) ? true : false,
                     'counter' => ($config['category_counters'] && $v['posts']) ? true : false,
@@ -1581,9 +1662,19 @@ function GetMetatags()
     if (isset($SYSTEM_FLAGS['meta']['keywords']) && ($SYSTEM_FLAGS['meta']['keywords'] != '')) {
         $meta['keywords'] = $SYSTEM_FLAGS['meta']['keywords'];
     }
-    $result = ($meta['description'] != '') ? '<meta name="description" content="' . secure_html($meta['description']) . "\" />\r\n" : '';
-    $result .= ($meta['keywords'] != '') ? '<meta name="keywords" content="' . secure_html($meta['keywords']) . "\" />\r\n" : '';
-    return $result;
+    $lines = [];
+    if ($meta['description'] != '') {
+        $lines[] = '<meta name="description" content="' . secure_html($meta['description']) . '" />';
+    }
+    if ($meta['keywords'] != '') {
+        $lines[] = '<meta name="keywords" content="' . secure_html($meta['keywords']) . '" />';
+    }
+    // Support for dynamic robots meta (e.g. pagination pages > 1)
+    if (isset($SYSTEM_FLAGS['meta']['robots']) && $SYSTEM_FLAGS['meta']['robots'] !== '') {
+        $lines[] = '<meta name="robots" content="' . secure_html($SYSTEM_FLAGS['meta']['robots']) . '" />';
+    }
+    // Возвращаем с обычными LF или без завершающего перевода в конце
+    return implode("\n", $lines) . (count($lines) ? "\n" : '');
 }
 // Generate pagination block
 function generatePaginationBlock($current, $start, $end, $paginationParams, $navigations, $intlink = false)
@@ -1647,12 +1738,21 @@ function ngSitePagination(
     int $navigationsCount = 0,
     bool $flagIntLink = false
 ): string {
-    global $config, $lang, $TemplateCache, $twig;
+    global $config, $lang, $TemplateCache, $twig, $SYSTEM_FLAGS;
     if ($totalPages < 2) {
         return '';
     }
     templateLoadVariables(true);
     $navigations = $TemplateCache['site']['#variables']['navigation'];
+    // Always expose pagination info when pagination is used
+    $SYSTEM_FLAGS['pagination']['current'] = $currentPage;
+    $SYSTEM_FLAGS['pagination']['total'] = $totalPages;
+    // If this is a paginated listing and page > 1 -> set meta robots noindex,follow (can be overridden earlier by plugins)
+    if ($currentPage > 1) {
+        if (!isset($SYSTEM_FLAGS['meta']['robots'])) {
+            $SYSTEM_FLAGS['meta']['robots'] = 'noindex,follow';
+        }
+    }
     // Prev page link
     $tvars['flags']['previous_page'] = false;
     $previousPage = 0;
@@ -2620,6 +2720,10 @@ function ngExceptionHandler($exception)
             $noAvatarURL = (isset($tplVars['configuration']) && is_array($tplVars['configuration']) && isset($tplVars['configuration']['noAvatarImage']) && $tplVars['configuration']['noAvatarImage']) ? (tpl_url . '/' . $tplVars['configuration']['noAvatarImage']) : (avatars_url . '/noavatar.gif');
             // Preload plugins for usermenu
             loadActionHandlers('usermenu');
+            // Execute action handlers for 'usermenu' so plugins (e.g., pm) can expose globals like `newpm`
+            // This runs functions registered via add_act('usermenu', ...), such as new_pm()
+            // and allows them to set $template vars and Twig globals before we render the menu/template
+            executeActionHandler('usermenu');
             // Load language file
             $lang = LoadLang('usermenu', 'site');
             // Prepare global params for TWIG
@@ -2661,7 +2765,7 @@ function ngExceptionHandler($exception)
                 $tVars['profile_link'] = generateLink('uprofile', 'edit');
                 // Добавляем ссылку на просмотр профиля
                 // Формируем ссылку на профиль
-                if (isset($userROW['name']) ) {
+                if (isset($userROW['name'])) {
                     $tVars['user_link'] = generateLink('uprofile', 'show', array('name' => $userROW['name']));
                 } else {
                     // Иначе используем ID
@@ -2733,8 +2837,28 @@ function ngExceptionHandler($exception)
                 }
             }
             if (!isset($TWIGFUNC[$funcName])) {
-                echo "ERROR :: callPlugin - no function [$funcName]<br/>\n";
-                return;
+                // План Б: Попробуем подгрузить основной файл плагина напрямую через version,
+                // если мэппинг действия 'twig' ещё не попал в конфиг активных плагинов.
+                if (preg_match("#^(.+?)\.(.+?)$#", $funcName, $m)) {
+                    $pluginId = $m[1];
+                    // Пройдёмся по version-файлам, найдём нужный плагин и подключим его основной файл
+                    $plist = function_exists('pluginsGetList') ? pluginsGetList() : [];
+                    if (isset($plist[$pluginId]) && is_array($plist[$pluginId])) {
+                        $pver = $plist[$pluginId];
+                        $pdir = isset($pver['dir']) ? $pver['dir'] : $pluginId;
+                        $pfile = isset($pver['file']) ? $pver['file'] : ($pluginId . '.php');
+                        $fullPath = extras_dir . '/' . $pdir . '/' . $pfile;
+                        if (is_file($fullPath)) {
+                            include_once $fullPath;
+                        }
+                    }
+                }
+                // Проверим ещё раз
+                if (!isset($TWIGFUNC[$funcName])) {
+                    // Функция плагина не найдена: возвратим null без вывода ошибки,
+                    // чтобы Twig-условия просто были ложными и не засоряли вывод
+                    return null;
+                }
             }
             return call_user_func($TWIGFUNC[$funcName], $params);
         }
@@ -2743,6 +2867,37 @@ function ngExceptionHandler($exception)
         {
             global $parse;
             return $parse->truncateHTML($string, $len, $finisher);
+        }
+        // Compute avatar URL with core fallback for missing/empty
+        function twigAvatarUrl($avatar)
+        {
+            $fallback = skins_url . '/images/default-avatar.jpg';
+            if (!is_string($avatar) || trim($avatar) == '') {
+                return $fallback;
+            }
+            $url = $avatar;
+            // Remote URLs: return as-is
+            if (preg_match('#^https?://#i', $url)) {
+                return $url;
+            }
+            // Try map URL to filesystem path and verify existence
+            $path = null;
+            // If URL starts with avatars_url, map to avatars_dir
+            if (strpos($url, avatars_url) === 0) {
+                $rel = substr($url, strlen(avatars_url));
+                $path = rtrim(avatars_dir, '/\\') . $rel;
+            } elseif (strpos($url, home) === 0) {
+                // URL under site home
+                $rel = substr($url, strlen(home));
+                $path = rtrim(site_root, '/\\') . $rel;
+            } elseif (strlen($url) && $url[0] === '/') {
+                // Absolute path relative to site root
+                $path = rtrim(site_root, '/\\') . $url;
+            }
+            if ($path && @file_exists($path)) {
+                return $url;
+            }
+            return $fallback;
         }
         function jsonFormatter($json)
         {

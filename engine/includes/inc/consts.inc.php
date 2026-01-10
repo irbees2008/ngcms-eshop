@@ -16,9 +16,9 @@ unset($tempVariable);
 // Определяем константы только если они ещё не определены
 if (!defined('NGCMS')) define('NGCMS', true);
 if (!defined('engineName')) define('engineName', 'NGCMS');
-if (!defined('engineVersion')) define('engineVersion', '0.9.8 Release');
+if (!defined('engineVersion')) define('engineVersion', '1.0.0');
 if (!defined('engineVersionType')) define('engineVersionType', 'GIT');
-if (!defined('engineVersionBuild')) define('engineVersionBuild', ' d2f66cc ');
+if (!defined('engineVersionBuild')) define('engineVersionBuild', '996871b');
 if (!defined('minDBVersion')) define('minDBVersion', 7);
 if (!defined('prefix')) define('prefix', $config['prefix']);
 if (!defined('uprefix')) define('uprefix', $config['uprefix']);

@@ -1,6 +1,6 @@
 <?php
 //
-// Copyright (C) 2006-2014 Next Generation CMS (http://ngcms.ru/)
+// Copyright (C) 2006-2014 Next Generation CMS (http://ngcms.org/)
 // Name: users.php
 // Description: manage users
 // Author: Vitaly Ponomarev
@@ -27,7 +27,7 @@ function userEditForm()
         msg(['type' => 'error', 'text' => $lang['perm.denied']], 1, 1);
         return;
     }
-    if (!($row = $mysql->record('select * from '.uprefix.'_users where id='.db_squote($id)))) {
+    if (!($row = $mysql->record('select * from ' . uprefix . '_users where id=' . db_squote($id)))) {
         ngSYSLOG(['plugin' => '#admin', 'item' => 'users', 'ds_id' => $id], ['action' => 'editForm'], null, [0, 'NOT.FOUND']);
         msg(['type' => 'error', 'text' => $lang['msge_not_found']]);
         return;
@@ -40,7 +40,21 @@ function userEditForm()
     }
     $status = '';
     foreach ($UGROUP as $ugID => $ugData) {
-        $status .= ' <option value="'.$ugID.'"'.(($row['status'] == $ugID) ? ' selected' : '').'>'.$ugID.' ('.$ugData['name'].')</option>';
+        $status .= ' <option value="' . $ugID . '"' . (($row['status'] == $ugID) ? ' selected' : '') . '>' . $ugID . ' (' . $ugData['name'] . ')</option>';
+    }
+    // Build avatar URL if helper exists
+    $avatarURL = '';
+    if (function_exists('userGetAvatar')) {
+        try {
+            $av = userGetAvatar($row);
+            $avatarURL = is_array($av) ? $av[1] : '';
+            $hasAvatar = is_array($av) ? (int)$av[0] : 0;
+        } catch (Throwable $e) {
+            $avatarURL = '';
+            $hasAvatar = 0;
+        }
+    } else {
+        $hasAvatar = ($row['avatar'] != '') ? 1 : 0;
     }
     //	Обрабатываем необходимые переменные для шаблона
     $tVars = [
@@ -57,8 +71,14 @@ function userEditForm()
         'last'       => (empty($row['last'])) ? $lang['no_last'] : LangDate('l, j Q Y - H:i', $row['last']),
         'ip'         => $row['ip'],
         'token'      => genUToken('admin.users'),
+        'avatar'     => $avatarURL,
+        'avatar_hint' => ($config['use_avatars'] ? (sprintf($lang['avatar_hint'], (intval($config['avatar_wh']) ? ($config['avatar_wh'] . 'x' . $config['avatar_wh']) : '—'), (intval($config['avatar_max_size']) ? intval($config['avatar_max_size']) : '—'))) : ''),
         'perm'       => [
             'modify' => $perm['modify'] ? 1 : 0,
+        ],
+        'flags'      => [
+            'avatarAllowed' => $config['use_avatars'] ? 1 : 0,
+            'hasAvatar'     => ($config['use_avatars'] ? $hasAvatar : 0),
         ],
     ];
     if (is_array($PFILTERS['plugin.uprofile'])) {
@@ -67,14 +87,16 @@ function userEditForm()
         }
     }
     ngSYSLOG(['plugin' => '#admin', 'item' => 'users', 'ds_id' => $id], ['action' => 'editForm'], null, [1]);
-    $xt = $twig->loadTemplate('skins/'.$config['admin_skin'].'/tpl/users/edit.tpl');
+    $xt = $twig->loadTemplate('skins/' . $config['admin_skin'] . '/tpl/users/edit.tpl');
     return $xt->render($tVars);
 }
 //
 // Edit user's profile
 function userEdit()
 {
-    global $mysql, $lang, $mod;
+    global $mysql, $lang, $mod, $config, $PFILTERS, $DSlist;
+    // Load required library for file/image management
+    @include_once root . 'includes/classes/upload.class.php';
     // Check for permissions
     if (!checkPermission(['plugin' => '#admin', 'item' => 'users'], null, 'modify')) {
         msg(['type' => 'error', 'text' => $lang['perm.denied']], 1, 1);
@@ -89,12 +111,61 @@ function userEdit()
     }
     $id = intval($_REQUEST['id']);
     // Check if user exists
-    if (!($row = $mysql->record('select * from '.uprefix.'_users where id='.db_squote($id)))) {
+    if (!($row = $mysql->record('select * from ' . uprefix . '_users where id=' . db_squote($id)))) {
         msg(['type' => 'error', 'text' => $lang['msge_not_found']]);
         ngSYSLOG(['plugin' => '#admin', 'item' => 'users', 'ds_id' => $id], ['action' => 'editForm'], null, [0, 'NOT.FOUND']);
         return;
     }
     $pass = ($_REQUEST['password']) ? EncodePassword($_REQUEST['password']) : '';
+    // Prepare avatar update fields
+    $avatar = $row['avatar'];
+    // Allow avatar ops only if enabled in config
+    if ($config['use_avatars']) {
+        // Delete avatar if requested
+        if (isset($_REQUEST['delavatar']) && $_REQUEST['delavatar']) {
+            // Try to delete avatar record/file (by analogy with uprofile)
+            // Search for avatar record in images table
+            if (is_array($imageRow = $mysql->record('select * from ' . prefix . "_images where owner_id = " . intval($row['id']) . ' and category = 1'))) {
+                $fmanager = new file_managment();
+                $fmanager->file_delete(['type' => 'avatar', 'id' => $imageRow['id']]);
+            } else if ($row['avatar']) {
+                @unlink($config['avatars_dir'] . $row['avatar']);
+            }
+            $avatar = '';
+        }
+        // Upload new avatar if provided
+        if (isset($_FILES['newavatar']) && !empty($_FILES['newavatar']['name'])) {
+            // Delete old avatar first
+            if ($row['avatar']) {
+                if (is_array($imageRow = $mysql->record('select * from ' . prefix . "_images where owner_id = " . intval($row['id']) . ' and category = 1'))) {
+                    $fmanager = new file_managment();
+                    $fmanager->file_delete(['type' => 'avatar', 'id' => $imageRow['id']]);
+                } else {
+                    @unlink($config['avatars_dir'] . $row['avatar']);
+                }
+            }
+            $fmanage = new file_managment();
+            $imanage = new image_managment();
+            $manualName = $row['id'] . '.' . strtolower($_FILES['newavatar']['name']);
+            $up = $fmanage->file_upload(['type' => 'avatar', 'http_var' => 'newavatar', 'replace' => 1, 'manualfile' => $manualName]);
+            if (is_array($up)) {
+                if (is_array($sz = $imanage->get_size($config['avatars_dir'] . $up[1]))) {
+                    $fmanage->get_limits('avatar');
+                    $lwh = intval($config['avatar_wh']);
+                    if ($lwh && (($sz[1] > $lwh) || ($sz[2] > $lwh))) {
+                        msg(['type' => 'error', 'text' => $lang['msge_avatar_size'], 'info' => sprintf($lang['msgi_avatar_size'], $lwh . 'x' . $lwh)]);
+                        $fmanage->file_delete(['type' => 'avatar', 'id' => $up[0]]);
+                    } else {
+                        // Сохраняем только имя файла аватара
+                        $avatar = $up[1];
+                    }
+                } else {
+                    msg(['type' => 'error', 'text' => $lang['msge_avatar_damaged']]);
+                    $fmanage->file_delete(['type' => 'avatar', 'id' => $up[0]]);
+                }
+            }
+        }
+    }
     // Prepare a list of changed params
     $cList = [];
     foreach (['level', 'where_from', 'info', 'mail'] as $k) {
@@ -106,7 +177,7 @@ function userEdit()
         $cList['pass'] = ['****', '****'];
     }
     ngSYSLOG(['plugin' => '#admin', 'item' => 'users', 'ds_id' => $id], ['action' => 'editForm', 'list' => $cList], null, [1]);
-    $mysql->query('update '.uprefix.'_users set `status`='.db_squote($_REQUEST['status']).', `where_from`='.db_squote($_REQUEST['where_from']).', `info`='.db_squote($_REQUEST['info']).', `mail`='.db_squote($_REQUEST['mail']).($pass ? ', `pass`='.db_squote($pass) : '').' where id='.db_squote($row['id']));
+    $mysql->query('update ' . uprefix . '_users set `status`=' . db_squote($_REQUEST['status']) . ', `where_from`=' . db_squote($_REQUEST['where_from']) . ', `info`=' . db_squote($_REQUEST['info']) . ', `mail`=' . db_squote($_REQUEST['mail']) . ($pass ? ', `pass`=' . db_squote($pass) : '') . ($config['use_avatars'] ? ', `avatar`=' . db_squote($avatar) : '') . ' where id=' . db_squote($row['id']));
     msg(['text' => $lang['msgo_edituser']]);
 }
 //
@@ -132,13 +203,13 @@ function userAdd()
         msg(['type' => 'error', 'text' => $lang['msge_fields'], 'info' => $lang['msgi_fields']]);
         return;
     }
-    if ($mysql->record('select * from '.uprefix.'_users where lower(name) = '.db_squote(strtolower($regusername)).' or lower(mail)='.db_squote(strtolower($regemail)))) {
+    if ($mysql->record('select * from ' . uprefix . '_users where lower(name) = ' . db_squote(strtolower($regusername)) . ' or lower(mail)=' . db_squote(strtolower($regemail)))) {
         msg(['type' => 'error', 'text' => $lang['msge_userexists'], 'info' => $lang['msgi_userexists']]);
         return;
     }
     $add_time = time() + ($config['date_adjust'] * 60);
     $regpassword = EncodePassword($regpassword);
-    $mysql->query('insert into '.uprefix.'_users (name, pass, mail, status, reg) values ('.db_squote($regusername).', '.db_squote($regpassword).', '.db_squote($regemail).', '.db_squote($reglevel).', '.db_squote($add_time).')');
+    $mysql->query('insert into ' . uprefix . '_users (name, pass, mail, status, reg) values (' . db_squote($regusername) . ', ' . db_squote($regpassword) . ', ' . db_squote($regemail) . ', ' . db_squote($reglevel) . ', ' . db_squote($add_time) . ')');
     msg(['text' => $lang['msgo_adduser']]);
 }
 //
@@ -162,7 +233,7 @@ function userMassActivate()
         return;
     }
     foreach ($selected_users as $id) {
-        $mysql->query('update '.uprefix."_users set activation='' where id=".db_squote($id));
+        $mysql->query('update ' . uprefix . "_users set activation='' where id=" . db_squote($id));
     }
     msg(['text' => $lang['msgo_activate']]);
 }
@@ -188,7 +259,7 @@ function userMassLock()
     }
     // Lock all users (excluding admins) and log them out!
     foreach ($selected_users as $id) {
-        $mysql->query('update '.uprefix.'_users set activation='.db_squote(MakeRandomPassword()).", authcookie='' where (id=".db_squote($id).') and (status <> 1)');
+        $mysql->query('update ' . uprefix . '_users set activation=' . db_squote(MakeRandomPassword()) . ", authcookie='' where (id=" . db_squote($id) . ') and (status <> 1)');
     }
     msg(['text' => $lang['msgo_lock']]);
 }
@@ -221,7 +292,7 @@ function userMassSetStatus()
     }
     // Lock all users (excluding admins)
     foreach ($selected_users as $id) {
-        $mysql->query('update '.uprefix.'_users set status='.db_squote($status).' where (id='.db_squote($id).') and (status <> 1)');
+        $mysql->query('update ' . uprefix . '_users set status=' . db_squote($status) . ' where (id=' . db_squote($id) . ') and (status <> 1)');
     }
     msg(['text' => $lang['msgo_status']]);
 }
@@ -251,16 +322,16 @@ function userMassDelete()
             continue;
         }
         // Fetch user's record
-        if (is_array($urow = $mysql->record('select * from '.prefix.'_users where id = '.db_squote($id)))) {
+        if (is_array($urow = $mysql->record('select * from ' . prefix . '_users where id = ' . db_squote($id)))) {
             // Do not delete admins
             if ($urow['status'] == 1) {
                 continue;
             }
             // Check if user has his own  avatar
-            if (($urow['avatar'] != '') && (file_exists($config['avatars_dir'].$urow['avatar']))) {
-                @unlink($config['avatars_dir'].$urow['avatar']);
+            if (($urow['avatar'] != '') && (file_exists($config['avatars_dir'] . $urow['avatar']))) {
+                @unlink($config['avatars_dir'] . $urow['avatar']);
             }
-            $mysql->query('delete from '.uprefix.'_users where id='.db_squote($id));
+            $mysql->query('delete from ' . uprefix . '_users where id=' . db_squote($id));
         }
     }
     msg(['text' => $lang['msgo_deluser']]);
@@ -281,7 +352,7 @@ function userMassDeleteInactive()
         return;
     }
     $today = time();
-    $mysql->query('DELETE FROM '.uprefix."_users WHERE ((last IS NULL) OR (last='')) AND ((reg + 86400) < $today) AND (news < 1)");
+    $mysql->query('DELETE FROM ' . uprefix . "_users WHERE ((last IS NULL) OR (last='')) AND ((reg + 86400) < $today) AND (news < 1)");
     msg(['text' => $lang['msgo_delunact']]);
 }
 //
@@ -319,24 +390,24 @@ function userList()
     $sortLinkMap = [];
     foreach (['i', 'n', 'r', 'l', 'p', 'g'] as $kOrder) {
         $sRec = [];
-        $sRec['isActive'] = (($inSort == $kOrder) || ($inSort == $kOrder.'d')) ? 1 : 0;
+        $sRec['isActive'] = (($inSort == $kOrder) || ($inSort == $kOrder . 'd')) ? 1 : 0;
         if ($sRec['isActive']) {
             $sRec['sign'] = ($inSort == $kOrder) ? '&#8595;&#8595;' : '&#8593;&#8593;';
-            $sRec['link'] = admin_url.'/admin.php?mod=users&action=list'.
-                (isset($_REQUEST['name']) && $_REQUEST['name'] ? '&name='.htmlspecialchars($_REQUEST['name'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : '').
-                (isset($_REQUEST['rpp']) && $_REQUEST['rpp'] ? '&rpp='.intval($_REQUEST['rpp']) : '').
-                '&sort='.$kOrder.(($inSort == $kOrder) ? 'd' : '');
+            $sRec['link'] = admin_url . '/admin.php?mod=users&action=list' .
+                (isset($_REQUEST['name']) && $_REQUEST['name'] ? '&name=' . htmlspecialchars($_REQUEST['name'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : '') .
+                (isset($_REQUEST['rpp']) && $_REQUEST['rpp'] ? '&rpp=' . intval($_REQUEST['rpp']) : '') .
+                '&sort=' . $kOrder . (($inSort == $kOrder) ? 'd' : '');
         } else {
             $sRec['sign'] = '';
-            $sRec['link'] = admin_url.'/admin.php?mod=users&action=list'.
-                (isset($_REQUEST['name']) && $_REQUEST['name'] ? '&name='.htmlspecialchars($_REQUEST['name'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : '').
-                (isset($_REQUEST['rpp']) && $_REQUEST['rpp'] ? '&rpp='.intval($_REQUEST['rpp']) : '').
-                '&sort='.$kOrder;
+            $sRec['link'] = admin_url . '/admin.php?mod=users&action=list' .
+                (isset($_REQUEST['name']) && $_REQUEST['name'] ? '&name=' . htmlspecialchars($_REQUEST['name'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : '') .
+                (isset($_REQUEST['rpp']) && $_REQUEST['rpp'] ? '&rpp=' . intval($_REQUEST['rpp']) : '') .
+                '&sort=' . $kOrder;
         }
         $sortLinkMap[$kOrder] = $sRec;
     }
     $sortValue = (isset($_REQUEST['sort']) && isset($sortOrderMap[$_REQUEST['sort']])) ? $sortOrderMap[$_REQUEST['sort']] : 'id';
-    $name = (isset($_REQUEST['name']) && $_REQUEST['name'] != '') ? ("'%".$mysql->db_quote($_REQUEST['name'])."%'") : '';
+    $name = (isset($_REQUEST['name']) && $_REQUEST['name'] != '') ? ("'%" . $mysql->db_quote($_REQUEST['name']) . "%'") : '';
     // Records Per Page
     // - Load
     $fRPP = (isset($_REQUEST['rpp']) && ($_REQUEST['rpp'] != '')) ? intval($_REQUEST['rpp']) : intval($admCookie['users']['pp']);
@@ -354,16 +425,30 @@ function userList()
     // FILTER (where) PARAMETERS
     $whereRules = [];
     if (strlen($name)) {
-        $whereRules[] = 'name like '.$name;
+        $whereRules[] = 'name like ' . $name;
     }
     if (isset($_REQUEST['group']) && (intval($_REQUEST['group']) > 0)) {
-        $whereRules[] = 'status = '.intval($_REQUEST['group']);
+        $whereRules[] = 'status = ' . intval($_REQUEST['group']);
     }
-    $queryFilter = count($whereRules) ? 'where '.implode(' and ', $whereRules) : '';
-    $sql = 'select * from '.uprefix.'_users '.$queryFilter.' order by '.$sortValue.' '.'limit '.(($pageNo - 1) * $fRPP).', '.$fRPP;
+    $queryFilter = count($whereRules) ? 'where ' . implode(' and ', $whereRules) : '';
+    $sql = 'select * from ' . uprefix . '_users ' . $queryFilter . ' order by ' . $sortValue . ' ' . 'limit ' . (($pageNo - 1) * $fRPP) . ', ' . $fRPP;
     $tEntries = [];
+    // Try to load avatar helper if available
+    if (!function_exists('userGetAvatar')) {
+        @include_once(extras_dir . '/uprofile/lib/uprofile.lib.php');
+    }
     foreach ($mysql->select($sql) as $row) {
-        $status = isset($UGROUP[$row['status']]) ? $UGROUP[$row['status']]['name'] : ('Unknown ['.$row['status'].']');
+        // Build avatar URL if helper exists
+        $avatarURL = '';
+        if (function_exists('userGetAvatar')) {
+            try {
+                $av = userGetAvatar($row);
+                $avatarURL = is_array($av) ? $av[1] : '';
+            } catch (Throwable $e) {
+                $avatarURL = '';
+            }
+        }
+        $status = isset($UGROUP[$row['status']]) ? $UGROUP[$row['status']]['name'] : ('Unknown [' . $row['status'] . ']');
         $tEntry = [
             'id'          => $row['id'],
             'name'        => $row['name'],
@@ -373,23 +458,24 @@ function userList()
             'cntComments' => $row['com'],
             'regdate'     => LangDate('j Q Y - H:i', $row['reg']),
             'lastdate'    => (empty($row['last'])) ? $lang['no_last'] : LangDate('j Q Y - H:i', $row['last']),
+            'avatar'      => $avatarURL,
             'flags'       => [
                 'isActive' => (!$row['activation'] || $row['activation'] == '') ? 1 : 0,
             ],
         ];
         $tEntries[] = $tEntry;
     }
-    $userCount = $mysql->result('SELECT count(*) FROM '.uprefix.'_users '.$queryFilter);
+    $userCount = $mysql->result('SELECT count(*) FROM ' . uprefix . '_users ' . $queryFilter);
     $pageCount = ceil($userCount / $fRPP);
     // Sorting flags
     //$linkSortOrders
     $pagination = generateAdminPagelist([
         'current' => $pageNo,
         'count'   => $pageCount,
-        'url'     => admin_url.'/admin.php?mod=users&action=list'.
-            (isset($_REQUEST['name']) && $_REQUEST['name'] ? '&name='.htmlspecialchars($_REQUEST['name'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : '').
-            (isset($_REQUEST['how']) && $_REQUEST['how'] ? '&how='.htmlspecialchars($_REQUEST['how'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : '').
-            (isset($_REQUEST['rpp']) && $_REQUEST['rpp'] ? '&rpp='.intval($_REQUEST['rpp']) : '').
+        'url'     => admin_url . '/admin.php?mod=users&action=list' .
+            (isset($_REQUEST['name']) && $_REQUEST['name'] ? '&name=' . htmlspecialchars($_REQUEST['name'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : '') .
+            (isset($_REQUEST['how']) && $_REQUEST['how'] ? '&how=' . htmlspecialchars($_REQUEST['how'], ENT_COMPAT | ENT_HTML401, 'UTF-8') : '') .
+            (isset($_REQUEST['rpp']) && $_REQUEST['rpp'] ? '&rpp=' . intval($_REQUEST['rpp']) : '') .
             '&page=%page%',
     ]);
     $tUgroup = [];
@@ -418,7 +504,7 @@ function userList()
             'haveComments'  => getPluginStatusInstalled('comments') ? 1 : 0,
         ],
     ];
-    $xt = $twig->loadTemplate('skins/'.$config['admin_skin'].'/tpl/users/table.tpl');
+    $xt = $twig->loadTemplate('skins/' . $config['admin_skin'] . '/tpl/users/table.tpl');
     return $xt->render($tVars);
 }
 // ==============================================

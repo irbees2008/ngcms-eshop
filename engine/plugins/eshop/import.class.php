@@ -1,11 +1,11 @@
 <?php
 
 if (!defined('NGCMS')) {
-    die ('HAL');
+    die('HAL');
 }
 
-include_once(__DIR__.'/cache.php');
-include_once(__DIR__.'/functions.php');
+include_once(__DIR__ . '/cache.php');
+include_once(__DIR__ . '/functions.php');
 
 class YMLCategory extends ImportConfig
 {
@@ -18,7 +18,7 @@ class YMLCategory extends ImportConfig
     {
         global $mysql;
 
-        foreach ($mysql->select("SELECT * FROM ".prefix."_eshop_categories ORDER BY position, id") as $category) {
+        foreach ($mysql->select("SELECT * FROM " . prefix . "_eshop_categories ORDER BY position, id") as $category) {
             $this->Add2Session(
                 $category['id'],
                 $category['name'],
@@ -29,7 +29,7 @@ class YMLCategory extends ImportConfig
         }
 
         if (!empty($_SESSION['cats'])) {
-            $this->eco('Существующие категории: '.count($_SESSION['cats']).' шт.<br>');
+            $this->eco('Существующие категории: ' . count($_SESSION['cats']) . ' шт.<br>');
         } else {
             $this->eco('На сайте ещё нет категорий<br>');
         }
@@ -43,11 +43,23 @@ class YMLCategory extends ImportConfig
     {
         global $mysql, $parse;
         $update = 0;
+
+        // Проверка на null или пустое значение
+        if ($xml === null || !is_object($xml)) {
+            $this->eco('XML категорий не найден или пуст.<br>');
+            return;
+        }
+
         foreach ($xml as $xml_cat) {
             $NAME = $xml_cat;
             $UF_ID = (int)$xml_cat->attributes()->id;
             $UF_PARENT_ID = (int)$xml_cat->attributes()->parentId;
-			$description = (int)$xml_cat->attributes()->description;
+            $description = (int)$xml_cat->attributes()->description;
+
+            // Инициализация массива, если его нет
+            if (!isset($_SESSION['cats_uf_ids']) || !is_array($_SESSION['cats_uf_ids'])) {
+                $_SESSION['cats_uf_ids'] = array();
+            }
 
             if (!in_array($UF_ID, $_SESSION['cats_uf_ids'])) {
 
@@ -57,20 +69,19 @@ class YMLCategory extends ImportConfig
                 if ($URL) {
                     if (!is_array(
                         $mysql->record(
-                            "select id from ".prefix."_eshop_categories where url = ".db_squote($URL)." limit 1"
+                            "select id from " . prefix . "_eshop_categories where url = " . db_squote($URL) . " limit 1"
                         )
-                    )
-                    ) {
+                    )) {
 
                         $mysql->query(
-                            'INSERT INTO '.prefix.'_eshop_categories (id, name, url, meta_title, parent_id, description) 
-                            VALUES 
-                            (   '.db_squote($UF_ID).',
-                                '.db_squote($NAME).',
-                                '.db_squote($URL).',
-                                '.db_squote($NAME).',
-                                '.db_squote($UF_PARENT_ID).',
-								'.db_squote($description).'
+                            'INSERT INTO ' . prefix . '_eshop_categories (id, name, url, meta_title, parent_id, description)
+                            VALUES
+                            (   ' . db_squote($UF_ID) . ',
+                                ' . db_squote($NAME) . ',
+                                ' . db_squote($URL) . ',
+                                ' . db_squote($NAME) . ',
+                                ' . db_squote($UF_PARENT_ID) . ',
+								' . db_squote($description) . '
                             )
                         '
                         );
@@ -81,23 +92,22 @@ class YMLCategory extends ImportConfig
                             $URL,
                             $UF_ID,
                             $UF_PARENT_ID,
-							$description
+                            $description
                         );
 
                         generate_catz_cache(true);
 
-                        $this->eco('Добавлена категория: '.$NAME.'<br>');
+                        $this->eco('Добавлена категория: ' . $NAME . '<br>');
                         $update++;
                     }
                 }
-
-
             }
-
         }
 
-        $this->eco('Количество XML категорий: '.count($xml).' шт.<br>');
-        $this->eco('Добавлено '.$update.' категорий.<br>');
+        // Безопасный подсчет элементов
+        $xml_count = is_countable($xml) ? count($xml) : (is_object($xml) ? iterator_count($xml) : 0);
+        $this->eco('Количество XML категорий: ' . $xml_count . ' шт.<br>');
+        $this->eco('Добавлено ' . $update . ' категорий.<br>');
     }
 
     /**
@@ -117,8 +127,6 @@ class YMLCategory extends ImportConfig
         $_SESSION['cats'][$id]['UF_PARENT_ID'] = $uf_parent_id;
         $_SESSION['cats_uf_ids'][] = $uf_id;
     }
-
-
 }
 
 class YMLOffer extends YMLCategory
@@ -139,36 +147,73 @@ class YMLOffer extends YMLCategory
         $PROP['name'] = $name;
         $PROP['url'] = $url;
         $PROP['meta_title'] = $name;
-       // $PROP['body'] = str_replace('&nbsp;', ' ', $description);
-		$PROP['body'] = $offer->description;
+        // $PROP['body'] = str_replace('&nbsp;', ' ', $description);
+        $PROP['body'] = $offer->description;
         $PROP['date'] = time() + ($config['date_adjust'] * 60);
         $PROP['editdate'] = time() + ($config['date_adjust'] * 60);
         $PROP['code'] = $offer->vendorCode;
-		$PROP['annotation'] = '';
+        $PROP['annotation'] = '';
 
         $vnames = [];
         foreach ($PROP as $k => $v) {
-            $vnames[] = $k.' = '.db_squote($v);
+            $vnames[] = $k . ' = ' . db_squote($v);
         }
-        $result = $mysql->query('INSERT INTO '.prefix.'_eshop_products SET '.implode(', ', $vnames).' ');
+        $result = $mysql->query('INSERT INTO ' . prefix . '_eshop_products SET ' . implode(', ', $vnames) . ' ');
 
         if ($result) {
-			
-			$qid = lastid('eshop_products');
+
+            $qid = lastid('eshop_products');
 
             if (count($offer->picture) > 0) {
                 $pictures = $this->xml2array($offer->picture);
                 $inx_img = 0;
                 foreach ($pictures as $picture) {
                     try {
+                        // Сбрасываем таймаут для каждого изображения
+                        @set_time_limit(60);
+
                         $rootpath = $_SERVER['DOCUMENT_ROOT'];
                         $url = substr($picture, 0, strpos($picture, '?') ? strpos($picture, '?') : strlen($picture));
                         $name = basename($url);
-                        $file_path = $rootpath."/uploads/eshop/products/temp/$name";
-                        file_put_contents($file_path, file_get_contents($url));
+                        $file_path = $rootpath . "/uploads/eshop/products/temp/$name";
+
+                        // Используем cURL для более быстрой загрузки с таймаутом
+                        if (function_exists('curl_init')) {
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, $url);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+                            $img_data = curl_exec($ch);
+                            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            curl_close($ch);
+
+                            if ($img_data === false || $http_code != 200) {
+                                $this->eco('Не удалось загрузить изображение: ' . $url . '<br>');
+                                continue;
+                            }
+                            file_put_contents($file_path, $img_data);
+                        } else {
+                            // Fallback на file_get_contents с контекстом
+                            $context = stream_context_create([
+                                'http' => [
+                                    'timeout' => 30,
+                                    'ignore_errors' => true
+                                ]
+                            ]);
+                            $img_data = @file_get_contents($url, false, $context);
+                            if ($img_data === false) {
+                                $this->eco('Не удалось загрузить изображение: ' . $url . '<br>');
+                                continue;
+                            }
+                            file_put_contents($file_path, $img_data);
+                        }
 
                         $fileParts = pathinfo($file_path);
-                        $extension = $fileParts ['extension'];
+                        $extension = $fileParts['extension'];
 
                         $extensions = array_map('trim', explode(',', pluginGetVariable('eshop', 'ext_image')));
 
@@ -180,16 +225,22 @@ class YMLOffer extends YMLCategory
 
                         // CREATE THUMBNAIL
                         if ($extension == "jpg" || $extension == "jpeg") {
-                            $src = imagecreatefromjpeg($file_path);
+                            $src = @imagecreatefromjpeg($file_path);
                         } else {
                             if ($extension == "png") {
-                                $src = imagecreatefrompng($file_path);
+                                $src = @imagecreatefrompng($file_path);
                             } else {
-                                $src = imagecreatefromgif($file_path);
+                                $src = @imagecreatefromgif($file_path);
                             }
                         }
 
-                        list ($width, $height) = getimagesize($file_path);
+                        if ($src === false) {
+                            $this->eco('Ошибка загрузки изображения: ' . $name . '<br>');
+                            @unlink($file_path);
+                            continue;
+                        }
+
+                        list($width, $height) = getimagesize($file_path);
 
                         $newwidth = pluginGetVariable('eshop', 'width_thumb');
 
@@ -199,28 +250,35 @@ class YMLOffer extends YMLCategory
 
                             imagecopyresampled($tmp, $src, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
 
-                            $thumbname = $rootpath."/uploads/eshop/products/temp/thumb/$name";
+                            $thumbname = $rootpath . "/uploads/eshop/products/temp/thumb/$name";
 
                             if (file_exists($thumbname)) {
                                 unlink($thumbname);
                             }
 
-                            imagejpeg($tmp, $thumbname,($pre_quality >= 10 && $pre_quality <= 100) ? $pre_quality : 100);
+                            imagejpeg($tmp, $thumbname, ($pre_quality >= 10 && $pre_quality <= 100) ? $pre_quality : 100);
 
                             imagedestroy($src);
                             imagedestroy($tmp);
                         } else {
                             if ($extension == "jpg" || $extension == "jpeg") {
-                                $src = imagecreatefromjpeg($file_path);
+                                $src = @imagecreatefromjpeg($file_path);
                             } else {
                                 if ($extension == "png") {
-                                    $src = imagecreatefrompng($file_path);
+                                    $src = @imagecreatefrompng($file_path);
                                 } else {
-                                    $src = imagecreatefromgif($file_path);
+                                    $src = @imagecreatefromgif($file_path);
                                 }
                             }
-                            imagejpeg($src,$file_path,($pre_quality >= 10 && $pre_quality <= 100) ? $pre_quality : 100);
-                            $thumbname = $rootpath."/uploads/eshop/products/temp/thumb/$name";
+
+                            if ($src === false) {
+                                $this->eco('Ошибка загрузки изображения: ' . $name . '<br>');
+                                @unlink($file_path);
+                                continue;
+                            }
+
+                            imagejpeg($src, $file_path, ($pre_quality >= 10 && $pre_quality <= 100) ? $pre_quality : 100);
+                            $thumbname = $rootpath . "/uploads/eshop/products/temp/thumb/$name";
                             copy($file_path, $thumbname);
 
                             imagedestroy($src);
@@ -230,16 +288,21 @@ class YMLOffer extends YMLCategory
                         if (isset($newwidth) && ($newwidth != '0')) {
 
                             if ($extension == "jpg" || $extension == "jpeg") {
-                                $src = imagecreatefromjpeg($file_path);
+                                $src = @imagecreatefromjpeg($file_path);
                             } else {
                                 if ($extension == "png") {
-                                    $src = imagecreatefrompng($file_path);
+                                    $src = @imagecreatefrompng($file_path);
                                 } else {
-                                    $src = imagecreatefromgif($file_path);
+                                    $src = @imagecreatefromgif($file_path);
                                 }
                             }
 
-                            list ($width, $height) = getimagesize($file_path);
+                            if ($src === false) {
+                                $this->eco('Ошибка загрузки изображения для pre_width: ' . $name . '<br>');
+                                continue;
+                            }
+
+                            list($width, $height) = getimagesize($file_path);
                             $newheight = ($height / $width) * $newwidth;
                             $tmp = imagecreatetruecolor($newwidth, $newheight);
                             imagecopyresampled($tmp, $src, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
@@ -254,55 +317,51 @@ class YMLOffer extends YMLCategory
 
                             imagedestroy($src);
                             imagedestroy($tmp);
-
                         }
 
                         $img = $name;
 
                         $timestamp = time();
-                        $iname = $timestamp."-".$img;
+                        $iname = $timestamp . "-" . $img;
 
-                        @mkdir($_SERVER['DOCUMENT_ROOT'].'/uploads/eshop/products/'.$qid.'/', 0777);
-                        @mkdir($_SERVER['DOCUMENT_ROOT'].'/uploads/eshop/products/'.$qid.'/thumb', 0777);
+                        @mkdir($_SERVER['DOCUMENT_ROOT'] . '/uploads/eshop/products/' . $qid . '/', 0777);
+                        @mkdir($_SERVER['DOCUMENT_ROOT'] . '/uploads/eshop/products/' . $qid . '/thumb', 0777);
 
-                        $temp_name = $_SERVER['DOCUMENT_ROOT'].'/uploads/eshop/products/temp/'.$img;
-                        $current_name = $_SERVER['DOCUMENT_ROOT'].'/uploads/eshop/products/'.$qid.'/'.$iname;
+                        $temp_name = $_SERVER['DOCUMENT_ROOT'] . '/uploads/eshop/products/temp/' . $img;
+                        $current_name = $_SERVER['DOCUMENT_ROOT'] . '/uploads/eshop/products/' . $qid . '/' . $iname;
                         rename($temp_name, $current_name);
 
-                        $temp_name = $_SERVER['DOCUMENT_ROOT'].'/uploads/eshop/products/temp/thumb/'.$img;
-                        $current_name = $_SERVER['DOCUMENT_ROOT'].'/uploads/eshop/products/'.$qid.'/thumb/'.$iname;
+                        $temp_name = $_SERVER['DOCUMENT_ROOT'] . '/uploads/eshop/products/temp/thumb/' . $img;
+                        $current_name = $_SERVER['DOCUMENT_ROOT'] . '/uploads/eshop/products/' . $qid . '/thumb/' . $iname;
                         rename($temp_name, $current_name);
 
-                        $mysql->query("INSERT INTO ".prefix."_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$inx_img')");
+                        $mysql->query("INSERT INTO " . prefix . "_eshop_images (`filepath`, `product_id`, `position`) VALUES ('$iname','$qid','$inx_img')");
 
                         $inx_img += 1;
-
                     } catch (Exception $ex) {
-                        $this->eco('Ошибка: '.$ex.'<br>');
+                        $this->eco('Ошибка: ' . $ex . '<br>');
 
                         return "0";
                     }
-
                 }
             }
 
             $category_id = (int)$offer->categoryId;
 
-            if ($category_id != 0) {  
-                $mysql->query("DELETE FROM ".prefix."_eshop_products_categories  WHERE `product_id` = '$qid' AND `category_id` = '$category_id'");
-                $mysql->query("INSERT INTO ".prefix."_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
+            if ($category_id != 0) {
+                $mysql->query("DELETE FROM " . prefix . "_eshop_products_categories  WHERE `product_id` = '$qid' AND `category_id` = '$category_id'");
+                $mysql->query("INSERT INTO " . prefix . "_eshop_products_categories (`product_id`, `category_id`) VALUES ('$qid','$category_id')");
             }
 
             $price = $offer->price;
             $currencyId = $offer->currencyId;
-            
-            if ((int)$offer->quantity_in_stock){
+
+            if ((int)$offer->quantity_in_stock) {
                 $stock = "5";
-            }
-            else{
+            } else {
                 $stock = "0";
             }
-            
+
             $quantity = (int)$offer->quantity_in_stock;
 
             if (isset($price)) {
@@ -316,68 +375,68 @@ class YMLOffer extends YMLCategory
                     }
                 }
 
-                $mysql->query("DELETE FROM ".prefix."_eshop_variants WHERE product_id='$qid'");
-                $mysql->query("INSERT INTO ".prefix."_eshop_variants (`product_id`, `price`, `stock`, `amount`) VALUES ('$qid', '$price', '$stock', '$quantity')");
+                $mysql->query("DELETE FROM " . prefix . "_eshop_variants WHERE product_id='$qid'");
+                $mysql->query("INSERT INTO " . prefix . "_eshop_variants (`product_id`, `price`, `stock`, `amount`) VALUES ('$qid', '$price', '$stock', '$quantity')");
             }
 
-//            $returnArr = array();
-//
-//            $returnArr[] = array_merge(['value' => $PROP['id']], array('name' => 'source_id'));
-//
-//            foreach ($offer->children() as $element) {
-//
-//                if (mb_strtolower($element->getName()) == 'param') {
-//                    $returnArr[] = array_merge(
-//                        ['value' => (string)$element],
-//                        $this->getElementAttributes($element)
-//                    );
-//                }
-//
-////                if (mb_strtolower($element->getName()) == 'url') {
-////                    $returnArr[] = array_merge(
-////                        ['value' => (string)$element],
-////                        array('name' => 'source_url')
-////                    );
-////                }
-//
-//            }
+            //            $returnArr = array();
+            //
+            //            $returnArr[] = array_merge(['value' => $PROP['id']], array('name' => 'source_id'));
+            //
+            //            foreach ($offer->children() as $element) {
+            //
+            //                if (mb_strtolower($element->getName()) == 'param') {
+            //                    $returnArr[] = array_merge(
+            //                        ['value' => (string)$element],
+            //                        $this->getElementAttributes($element)
+            //                    );
+            //                }
+            //
+            ////                if (mb_strtolower($element->getName()) == 'url') {
+            ////                    $returnArr[] = array_merge(
+            ////                        ['value' => (string)$element],
+            ////                        array('name' => 'source_url')
+            ////                    );
+            ////                }
+            //
+            //            }
 
-//            foreach ($returnArr as $el) {
-//                $f_name = iconv('utf-8', 'windows-1251', $el['name']);
-//                $feature_row = $mysql->record(
-//                    "select * from ".prefix."_eshop_features where name = ".db_squote($f_name)." limit 1"
-//                );
-//                if (!is_array($feature_row)) {
-//                    $mysql->query('INSERT INTO '.prefix.'_eshop_features (name) VALUES ('.db_squote($f_name).')');
-//                    $rowID = lastid('eshop_features');
-//                    $f_key = $rowID;
-//                } else {
-//                    $f_key = $feature_row['id'];
-//                }
-//
-//                $f_value = iconv('utf-8', 'windows-1251', $el['value']);
-//                if ($f_value != "") {
-//                    
-//                    $mysql->query(
-//                        "DELETE FROM ".prefix."_eshop_options  WHERE `product_id` = '$qid' AND `feature_id` = '$f_key' "                       
-//                    );
-//                    
-//                    $mysql->query(
-//                        "INSERT INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')"
-//                    );
-//                }
-//
-//            }
-            
-            if ($offer->param){
-            
+            //            foreach ($returnArr as $el) {
+            //                $f_name = iconv('utf-8', 'windows-1251', $el['name']);
+            //                $feature_row = $mysql->record(
+            //                    "select * from ".prefix."_eshop_features where name = ".db_squote($f_name)." limit 1"
+            //                );
+            //                if (!is_array($feature_row)) {
+            //                    $mysql->query('INSERT INTO '.prefix.'_eshop_features (name) VALUES ('.db_squote($f_name).')');
+            //                    $rowID = lastid('eshop_features');
+            //                    $f_key = $rowID;
+            //                } else {
+            //                    $f_key = $feature_row['id'];
+            //                }
+            //
+            //                $f_value = iconv('utf-8', 'windows-1251', $el['value']);
+            //                if ($f_value != "") {
+            //
+            //                    $mysql->query(
+            //                        "DELETE FROM ".prefix."_eshop_options  WHERE `product_id` = '$qid' AND `feature_id` = '$f_key' "
+            //                    );
+            //
+            //                    $mysql->query(
+            //                        "INSERT INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')"
+            //                    );
+            //                }
+            //
+            //            }
+
+            if ($offer->param) {
+
                 foreach ($offer->param as $el) {
                     $f_name = $el['name'];
                     $feature_row = $mysql->record(
-                        "select * from ".prefix."_eshop_features where name = ".db_squote($f_name)." limit 1"
+                        "select * from " . prefix . "_eshop_features where name = " . db_squote($f_name) . " limit 1"
                     );
                     if (!is_array($feature_row)) {
-                        $mysql->query('INSERT INTO '.prefix.'_eshop_features (name) VALUES ('.db_squote($f_name).')');
+                        $mysql->query('INSERT INTO ' . prefix . '_eshop_features (name) VALUES (' . db_squote($f_name) . ')');
                         $rowID = lastid('eshop_features');
                         $f_key = $rowID;
                     } else {
@@ -386,16 +445,14 @@ class YMLOffer extends YMLCategory
 
                     $f_value = $el[0];
                     if ($f_value != "") {
-                        $mysql->query("DELETE FROM ".prefix."_eshop_options  WHERE `product_id` = '$qid' AND `feature_id` = '$f_key' ");
-                        $mysql->query("INSERT INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
+                        $mysql->query("DELETE FROM " . prefix . "_eshop_options  WHERE `product_id` = '$qid' AND `feature_id` = '$f_key' ");
+                        $mysql->query("INSERT INTO " . prefix . "_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
                     }
-
                 }
             }
-
         }
-        
-//        die();
+
+        //        die();
 
 
     }
@@ -412,29 +469,28 @@ class YMLOffer extends YMLCategory
 
         $description = $offer->description;
         $PROP = array();
-//        $PROP['id'] = (int)$offer->attributes()->id;       
-        $PROP['body'] = str_replace('&nbsp;', ' ', $description);       
-        $PROP['editdate'] = $PROP['date'];
-//        $PROP['code'] = (string)$offer->vendorCode;
+        //        $PROP['id'] = (int)$offer->attributes()->id;
+        $PROP['body'] = str_replace('&nbsp;', ' ', $description);
+        $PROP['editdate'] = time() + ($config['date_adjust'] * 60);
+        //        $PROP['code'] = (string)$offer->vendorCode;
         $PROP['name'] = $name;
 
         $vnames = array();
         foreach ($PROP as $k => $v) {
-            $vnames[] = $k.' = '.db_squote($v);
+            $vnames[] = $k . ' = ' . db_squote($v);
         }
-        
-        
+
+
         $qid = (int)$id;
-        
-        $result = $mysql->query('UPDATE '.prefix.'_eshop_products SET '.implode(', ', $vnames).' WHERE id = "'.$qid.'" LIMIT 1');        
+
+        $result = $mysql->query('UPDATE ' . prefix . '_eshop_products SET ' . implode(', ', $vnames) . ' WHERE id = "' . $qid . '" LIMIT 1');
 
         $price = $offer->price;
         $currencyId = $offer->currencyId;
 
-        if ((int)$offer->quantity_in_stock){
+        if ((int)$offer->quantity_in_stock) {
             $stock = "5";
-        }
-        else{
+        } else {
             $stock = "0";
         }
 
@@ -451,22 +507,22 @@ class YMLOffer extends YMLCategory
                 }
             }
 
-            $mysql->query("DELETE FROM ".prefix."_eshop_variants WHERE product_id='$qid'");
-            $mysql->query("INSERT INTO ".prefix."_eshop_variants (`product_id`, `price`, `stock`, `amount`) VALUES ('$qid', '$price', '$stock', '$quantity')");
+            $mysql->query("DELETE FROM " . prefix . "_eshop_variants WHERE product_id='$qid'");
+            $mysql->query("INSERT INTO " . prefix . "_eshop_variants (`product_id`, `price`, `stock`, `amount`) VALUES ('$qid', '$price', '$stock', '$quantity')");
         }
 
-         $mysql->query("DELETE FROM ".prefix."_eshop_options  WHERE `product_id` = '$qid'");
-         
-   
-        if ($offer->param){
+        $mysql->query("DELETE FROM " . prefix . "_eshop_options  WHERE `product_id` = '$qid'");
+
+
+        if ($offer->param) {
 
             foreach ($offer->param as $el) {
                 $f_name = $el['name'];
                 $feature_row = $mysql->record(
-                    "select * from ".prefix."_eshop_features where name = ".db_squote($f_name)." limit 1"
+                    "select * from " . prefix . "_eshop_features where name = " . db_squote($f_name) . " limit 1"
                 );
                 if (!is_array($feature_row)) {
-                    $mysql->query('INSERT INTO '.prefix.'_eshop_features (name) VALUES ('.db_squote($f_name).')');
+                    $mysql->query('INSERT INTO ' . prefix . '_eshop_features (name) VALUES (' . db_squote($f_name) . ')');
                     $rowID = lastid('eshop_features');
                     $f_key = $rowID;
                 } else {
@@ -474,23 +530,21 @@ class YMLOffer extends YMLCategory
                 }
 
                 $f_value = $el[0];
-                
-                $mysql->query("DELETE FROM ".prefix."_eshop_options  WHERE `product_id` = '$qid' AND `feature_id` = '$f_key' ");
-                
-                if ($f_value != "") {
-                    $mysql->query("INSERT INTO ".prefix."_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
-                }
 
+                $mysql->query("DELETE FROM " . prefix . "_eshop_options  WHERE `product_id` = '$qid' AND `feature_id` = '$f_key' ");
+
+                if ($f_value != "") {
+                    $mysql->query("INSERT INTO " . prefix . "_eshop_options (`product_id`, `feature_id`, `value`) VALUES ('$qid','$f_key','$f_value')");
+                }
             }
         }
 
-        
-        
-//        die();
+
+
+        //        die();
 
 
     }
-
 }
 
 class ImportConfig
@@ -563,7 +617,6 @@ class ImportConfig
 
         return $out;
     }
-
 }
 
 final class Translit
@@ -738,9 +791,7 @@ final class Translit
      *
      * @access private
      */
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * Статический метод транслитерации
@@ -767,7 +818,7 @@ final class Translit
 
         if ($wordSeparator) {
             $string = str_replace(' ', $wordSeparator, $string);
-            $string = preg_replace('/['.$wordSeparator.']{2,}/', '', $string);
+            $string = preg_replace('/[' . $wordSeparator . ']{2,}/', '', $string);
         }
 
         if ($clean) {
@@ -789,5 +840,4 @@ final class Translit
     {
         return strtolower(self::transliterate($string, '_', true));
     }
-
 }

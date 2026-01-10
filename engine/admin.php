@@ -1,6 +1,6 @@
 <?php
 //
-// Copyright (C) 2006-2016 Next Generation CMS (http://ngcms.ru)
+// Copyright (C) 2006-2016 Next Generation CMS (http://ngcms.org)
 // Name: admin.php
 // Description: administration panel
 // Author: Vitaly Ponomarev, Alexey Zinchenko
@@ -198,12 +198,10 @@ if (!$mod) {
 if ($_GET['plugin'] && $_GET['handler']) {
     $plugin = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['plugin']);
     $handler = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['handler']);
-    
     // Load plugin file
     $pluginFile = root . '/plugins/' . $plugin . '/' . $plugin . '.php';
     if (file_exists($pluginFile)) {
         include_once $pluginFile;
-        
         // Call plugin function
         $function_name = 'plugin_' . $plugin . '_' . $handler;
         if (function_exists($function_name)) {
@@ -241,8 +239,32 @@ if (is_array($userROW)) {
     $newpm = '';
     $unapp1 = '';
     $unapp2 = '';
-$newpm = $mysql->result("SELECT count(pmid) FROM " . prefix . "_users_pm WHERE to_id = " . db_squote($userROW['id']) . " AND viewed = '0'");
-    $newpmText = ($newpm != "0") ? $newpm . ' ' . Padeg($newpm, $lang['head_pm_skl']) : $lang['head_pm_no'];
+    // Check if PM plugin is active and get new messages count
+    $newpm = 0;
+    $newpmText = $lang['head_pm_no'];
+    // Load PM plugin if it exists and is active
+    if (is_file(root . '/engine/plugins/pm/pm.php')) {
+        @include_once(root . '/engine/plugins/pm/pm.php');
+    }
+    if (function_exists('new_pm')) {
+        // PM plugin is active, get actual count
+        $newpmText = new_pm();
+        // Extract number from the text for counting
+        if (isset($GLOBALS['template']['vars']['newpm'])) {
+            $newpm = $GLOBALS['template']['vars']['newpm'];
+        }
+    } else {
+        // Fallback: get count directly from database if PM table exists
+        try {
+            $result = $mysql->query("SHOW TABLES LIKE '" . $config['prefix'] . "_pm'");
+            if ($mysql->num_rows($result) > 0 && is_array($userROW) && $userROW['id']) {
+                $newpm = intval($mysql->result("SELECT COUNT(*) FROM " . $config['prefix'] . "_pm WHERE to_id = " . intval($userROW['id']) . " AND folder='inbox' AND viewed = '0'"));
+                $newpmText = ($newpm > 0) ? $newpm . ' новых сообщений' : $lang['head_pm_no'];
+            }
+        } catch (Exception $e) {
+            // PM table doesn't exist, keep default values
+        }
+    }
     // Calculate number of un-approved news
     if ($userROW['status'] == 1 || $userROW['status'] == 2) {
         $unapp1 = $mysql->result("SELECT count(id) FROM " . prefix . "_news WHERE approve = '-1'");
@@ -291,13 +313,19 @@ $tVars = [
     'unapproved3'           => $unapproved3,
     'unnAppText'            => $unnAppText,
     'unnAppLabel'           => $unnAppLabel,
+    // Глобальный токен для RPC admin.statistics.* (нужен для кнопки очистки кэша в топбаре)
+    'token_statistics'      => genUToken('admin.statistics'),
+    // Унифицированный профиль пользователя для шаблонов
     'user' => array(
-        'id' => $userROW['id'],
-        'name' => $userROW['name'],
-        'status' => $status,
-        'avatar' => $userAvatar,
-        'flags' => array(
-            'hasAvatar' => $config['use_avatars'] and $userAvatar,
+        'id'     => $userROW['id'],
+        'name'   => $userROW['name'],
+        // Храним числовой статус (ID группы), текстовый статус уже есть в skin_UStatus
+        'status' => $userROW['status'],
+        // Аватар – всегда либо реальный (через userGetAvatar), либо заглушка
+        'avatar' => $skin_UAvatar,
+        'flags'  => array(
+            // Имеет реальный аватар, если включены аватары и поле avatar непустое
+            'hasAvatar' => ($config['use_avatars'] && !empty($userROW['avatar'])) ? 1 : 0,
         ),
     ),
     'newpmText' => $newpmText,
@@ -314,6 +342,7 @@ $tVars = [
         'templates'     => checkPermission(['plugin' => '#admin', 'item' => 'templates'], null, 'details'),
         'ipban'         => checkPermission(['plugin' => '#admin', 'item' => 'ipban'], null, 'view'),
         'users'         => checkPermission(['plugin' => '#admin', 'item' => 'users'], null, 'view'),
+        'cache'         => checkPermission(['plugin' => '#admin', 'item' => 'cache'], null, 'modify'),
     ],
 ];
 // Register global vars

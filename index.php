@@ -1,6 +1,6 @@
 <?php
 //
-// Copyright (C) 2006-2016 Next Generation CMS (http://ngcms.ru)
+// Copyright (C) 2006-2016 Next Generation CMS (http://ngcms.org)
 // Name: index.php
 // Description: core index file
 // Author: NGCMS project team
@@ -234,13 +234,43 @@ executeActionHandler('index_post');
 // Prepare JS/CSS/RSS references
 // Make empty OLD STYLE variables
 $template['vars']['metatags'] = '';
+$template['vars']['canonical'] = '';
+$template['vars']['pagination_current'] = '';
+$template['vars']['pagination_total'] = '';
 $template['vars']['extracss'] = '';
 // Fill extra CSS links
 foreach ($EXTRA_CSS as $css => $null) {
     $EXTRA_HTML_VARS[] = ['type' => 'css', 'data' => $css];
 }
-// Generate metatags
-$EXTRA_HTML_VARS[] = ['type' => 'plain', 'data' => GetMetatags()];
+// Generate metatags separately (not via htmlvars) to avoid structural issues
+$template['vars']['metatags'] = GetMetatags();
+// Export pagination info from SYSTEM_FLAGS if present
+if (isset($SYSTEM_FLAGS['pagination']['current'])) {
+    $template['vars']['pagination_current'] = intval($SYSTEM_FLAGS['pagination']['current']);
+}
+if (isset($SYSTEM_FLAGS['pagination']['total'])) {
+    $template['vars']['pagination_total'] = intval($SYSTEM_FLAGS['pagination']['total']);
+}
+// Canonical URL logic
+$canonicalBase = rtrim($config['home_url'], '/');
+$requestURI = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+// Strip query string for canonical
+$requestPath = explode('?', $requestURI, 2)[0];
+// Build absolute current URL
+$currentAbs = $canonicalBase . $requestPath;
+$pageNo = 1;
+if (isset($SYSTEM_FLAGS['pagination']['current']) && $SYSTEM_FLAGS['pagination']['current'] > 1) {
+    $pageNo = intval($SYSTEM_FLAGS['pagination']['current']);
+}
+// Strategy: canonical первой страницы для пагинации >1
+if ($pageNo > 1) {
+    // Удаляем хвост типа /page/2.html или ?page=2 (простейшие варианты)
+    $canonicalFirst = preg_replace('#(/page/\d+\.html)$#i', '/', $requestPath);
+    // Если есть параметр page в query (вдруг), то игнорируем его
+    $template['vars']['canonical'] = '<link rel="canonical" href="' . $canonicalBase . rtrim($canonicalFirst, '/') . '/" />';
+} else {
+    $template['vars']['canonical'] = '<link rel="canonical" href="' . $currentAbs . '" />';
+}
 // Fill additional HTML vars
 $htmlrow = [];
 $dupCheck = [];
@@ -301,7 +331,20 @@ $template['vars']['memPeakUsage'] = sprintf('%7.3f', (memory_get_peak_usage() / 
 $mainTemplateName = isset($SYSTEM_FLAGS['template.main.name']) ? $SYSTEM_FLAGS['template.main.name'] : 'main';
 $mainTemplatePath = isset($SYSTEM_FLAGS['template.main.path']) ? $SYSTEM_FLAGS['template.main.path'] : tpl_site;
 // 2. Load & show template
+$__flash = isset($_SESSION['flash_notify']) && is_array($_SESSION['flash_notify']) ? $_SESSION['flash_notify'] : null;
+if ($__flash) {
+    msg($__flash);
+    // Не очищаем сразу, дождёмся успешной вставки
+}
 $tpl->template($mainTemplateName, $mainTemplatePath);
+// Если флеш есть – подготовим notify до привязки переменных
+if ($__flash) {
+    if (!empty($template['vars']['notify'])) {
+        $template['vars']['mainblock'] .= $template['vars']['notify'];
+    }
+    unset($_SESSION['flash_notify']);
+}
+// Привязываем (повторно) переменные шаблона после возможного изменения mainblock
 $tpl->vars($mainTemplateName, $template);
 if (!$SUPRESS_TEMPLATE_SHOW) {
     printHTTPheaders();

@@ -11,14 +11,11 @@
 	  </div><!-- /.col -->
 	</div><!-- /.row -->
   </div><!-- /.container-fluid -->
-
 <form name="form" action="?mod=pm&action=send" method="post">
 	<input type="hidden" name="token" value="{{ token }}" />
-
 	<div class="row">
 		<!-- Left edit column -->
 		<div class="col-lg-8">
-
 			<!-- MAIN CONTENT -->
 			<div id="maincontent" class="card">
 				<div class="card-body">
@@ -37,7 +34,6 @@
 							<input type="text" name="title" value="" class="form-control" maxlength="50" required />
 						</div>
 					</div>
-
 					{{ quicktags }}
 					<!-- SMILES -->
 					<div id="modal-smiles" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="smiles-modal-label" aria-hidden="true">
@@ -56,13 +52,11 @@
 							</div>
 						</div>
 					</div>
-
 					<div class="mb-3">
 						<!-- {{ lang.content }} -->
 						<textarea id="content" name="content" rows="10" cols="60" maxlength="3000" class="form-control" required></textarea>
 					</div>
 				</div>
-
 				<div class="card-footer text-center">
 					<button type="submit" class="btn btn-outline-success">{{ lang.send }}</button>
 				</div>

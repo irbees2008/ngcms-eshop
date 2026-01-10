@@ -7,19 +7,60 @@
 			-
 			{{ lang['admin_panel'] }}</title>
 		<link href="{{ skins_url }}/public/css/app.css" rel="stylesheet"/>
-		<script src="{{ skins_url }}/public/js/manifest.js" type="text/javascript"></script>
-		<script src="{{ skins_url }}/public/js/vendor.js" type="text/javascript"></script>
-		<script src="{{ skins_url }}/public/js/app.js" type="text/javascript"></script>
-		<style>
-			body {
-				font-weight: 300;
-			}
-		</style>
+		 <script src="{{ skins_url }}/public/js/manifest.js" type="text/javascript"></script>
+		 <script src="{{ skins_url }}/public/js/vendor.js" type="text/javascript"></script>
+		 <script src="{{ skins_url }}/public/js/app.js" type="text/javascript"></script>
+			<style>
+body {
+	font-weight: 300;
+}
+/* Глобальный оверлей загрузки: фиксированный, не влияет на поток */
+#loading-layer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 20000;
+	display: none;
+	background: rgba(255, 255, 255, 0.65);
+	backdrop-filter: blur(1px);
+}
+#loading-layer .loading-content {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 0.75rem 1rem;
+	border-radius: 0.5rem;
+	background: rgba(255, 255, 255, 0.95);
+	color: #333;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 500;
+}
+#loading-layer .spinner {
+	width: 1.25rem;
+	height: 1.25rem;
+	border: 2px solid rgba(0, 0, 0, 0.2);
+	border-top-color: rgba(0, 0, 0, 0.6);
+	border-radius: 50%;
+	animation: v-spin 0.8s linear infinite;
+}
+@keyframes v-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+	</style>
 	</head>
-	<body>
-		<div id="loading-layer" class="col-md-3 alert alert-dark" role="alert">
-			<i class="fa fa-spinner fa-pulse mr-2"></i>
-			{{ lang['loading'] }}
+		<body>
+			<div id="loading-layer" style="display:none"> <div class="loading-content">
+				<span class="spinner" aria-hidden="true"></span>
+				<span>{{ lang['loading'] }}</span>
+			</div>
 		</div>
 		<nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
 			<a href="{{ php_self }}" class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 admin">
@@ -33,22 +74,31 @@
 					<li
 						class="nav-item">
 						<!-- Иконка уведомлений -->
-						<a type="button" class="nav-link" data-toggle="modal" data-target="#notificationsModal">
+						<a type="button" class="nav-link" data-toggle="modal" data-target="#notificationsModal" title="{{ lang['notifications']|default('Уведомления') }}" data-bs-toggle="tooltip" data-bs-placement="bottom">
 							<i class="fa fa-bell-o fa-lg"></i>
 							<span class="badge badge-notife badge-danger">{{ unnAppLabel }}</span>
 						</a>
 					</li>
+					{% if perm.cache %}
+						<li
+							class="nav-item">
+							<!-- Очистка кэша (браузер + сервер) -->
+							<a type="button" class="nav-link" id="btn-clear-cache" title="{{ lang['cache.clean']|default('Очистить кеш') }}" data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="fa fa-refresh fa-lg"></i>
+							</a>
+						</li>
+					{% endif %}
 					<li
 						class="nav-item">
 						<!-- Иконка добавления контента -->
-						<a type="button" class="nav-link" data-toggle="modal" data-target="#addContentModal">
+						<a type="button" class="nav-link" data-toggle="modal" data-target="#addContentModal" title="{{ lang['content.add']|default('Добавить контент') }}" data-bs-toggle="tooltip" data-bs-placement="bottom">
 							<i class="fa fa-plus fa-lg"></i>
 						</a>
 					</li>
 					<li
 						class="nav-item">
 						<!-- Иконка профиля пользователя -->
-						<a type="button" class="nav-link" data-toggle="modal" data-target="#userProfileModal">
+						<a type="button" class="nav-link" data-toggle="modal" data-target="#userProfileModal" title="{{ lang['user.profile']|default('Профиль пользователя') }}" data-bs-toggle="tooltip" data-bs-placement="bottom">
 							<i class="fa fa-user-o fa-lg"></i>
 						</a>
 					</li>
@@ -202,7 +252,7 @@
 									Документация</a>
 							</li>
 							<li>
-								<a href="https://forum.ngcms.org/" target="_blank">
+								<a href="https://forum.ngcms.org" target="_blank">
 									<i class="fa fa-comments-o" aria-hidden="true"></i>
 									Форум поддержки</a>
 							</li>
@@ -212,7 +262,7 @@
 									Официальный сайт</a>
 							</li>
 							<li>
-								<a href="https://github.com/irbees2008/ngcms-core" target="_blank">
+								<a href="https://github.com/vponomarev/ngcms-core" target="_blank">
 									<i class="fa fa-github"></i>
 									Github</a>
 							</li>
@@ -227,7 +277,7 @@
 			<footer class="border-top mt-5">
 				<p class="text-right text-muted py-4 my-0">2008-{{ year }}
 					©
-					<a href="http://ngcms.ru" target="_blank">Next Generation CMS</a>
+					<a href="http://ngcms.org" target="_blank">Next Generation CMS</a>
 				</p>
 			</footer>
 		</div>
@@ -248,7 +298,11 @@
 						{{ unapproved3 }}
 						<a class="dropdown-item" href="{{ php_self }}?mod=pm" title="{{ lang['pm_t'] }}">
 							<i class="fa fa-envelope-o"></i>
-							{{ newpmText }}</a>
+							{{ newpmText }}
+							{% if newpm > 0 %}
+								<span class="badge badge-danger ml-2">{{ newpm }}</span>
+							{% endif %}
+						</a>
 					</div>
 				</div>
 			</div>
@@ -341,72 +395,158 @@
 					</div>
 				</div>
 			</div>
-			<script type="text/javascript">
-{% set encode_lang = lang | json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE')) %}
-window.NGCMS = {
-admin_url: '{{ admin_url }}',
-home: '{{ home }}',
-lang: {{ encode_lang ?: '{}' }},
-langcode: '{{ lang['langcode'] }}',
-php_self: '{{ php_self }}',
-skins_url: '{{ skins_url }}'
-};
-$('#menu-content .sub-menu').on('show.bs.collapse', function () {
-$('#menu-content .sub-menu.show').not(this).removeClass('show');
-});
-$(document).ready(function () { // Функция для определения ширины скроллбара
-function getScrollbarWidth() {
-var outer = document.createElement("div");
-outer.style.visibility = "hidden";
-outer.style.width = "100px";
-outer.style.msOverflowStyle = "scrollbar"; // needed for WinJS apps
-document.body.appendChild(outer);
-var widthNoScroll = outer.offsetWidth;
-// force scrollbars
-outer.style.overflow = "scroll";
-// add inner div
-var inner = document.createElement("div");
-inner.style.width = "100%";
-outer.appendChild(inner);
-var widthWithScroll = inner.offsetWidth;
-// remove divs
-outer.parentNode.removeChild(outer);
-return widthNoScroll - widthWithScroll;
-}
-// Сохраняем ширину скроллбара в переменную
-var scrollbarWidth = getScrollbarWidth();
-// При открытии модального окна
-$('.modal').on('show.bs.modal', function () {
-if ($('body').height() > $(window).height()) {
-$('body').addClass('modal-scrollbar-compensate');
-}
-$('body').addClass('modal-open-no-scroll');
-});
-// При закрытии модального окна
-$('.modal').on('hidden.bs.modal', function () {
-$('body').removeClass('modal-scrollbar-compensate');
-$('body').removeClass('modal-open-no-scroll');
-});
-// Добавляем компенсацию ширины скроллбара
-$(window).on('resize', function () {
-if ($('body').hasClass('modal-scrollbar-compensate')) {
-if (scrollbarWidth) {
-$('body').css('margin-right', scrollbarWidth);
-} else {
-$('body').css('margin-right', '17px'); // Задаём стандартное значение на случай если не удалось определить ширину скроллбара
-}
-} else {
-$('body').css('margin-right', '0');
-}
-}).trigger('resize');
-});
-// Auto reload after configuration save
-if (window.location.search.includes('mod=configuration')) {
-	$(document).on('submit', 'form', function() {
-		setTimeout(function() { location.reload(); }, 1500);
-	});
-}
-			</script>
+			 <script type="text/javascript">
+							{% set encode_lang = lang | json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE')) %}
+			window.NGCMS = {
+			admin_url: '{{ admin_url }}',
+			home: '{{ home }}',
+			lang: {{ encode_lang ?: '{}' }},
+			langcode: '{{ lang['langcode'] }}',
+			php_self: '{{ php_self }}',
+			skins_url: '{{ skins_url }}'
+			};
+			$('#menu-content .sub-menu').on('show.bs.collapse', function () {
+			$('#menu-content .sub-menu.show').not(this).removeClass('show');
+			});
+			// Очистка кэшей браузера: localStorage, sessionStorage, Cache Storage
+			async function clearBrowserCaches() {
+			try {
+			try {
+			window.localStorage && window.localStorage.clear();
+			} catch (e) {}
+			try {
+			window.sessionStorage && window.sessionStorage.clear();
+			} catch (e) {}
+			if (window.caches && caches.keys) {
+			const keys = await caches.keys();
+			await Promise.all(keys.map((k) => caches.delete(k)));
+			}
+			return true;
+			} catch (e) {
+			return false;
+			}
+			}
+			// Хендлер кнопки очистки кэша
+			// Универсальный показ уведомлений: $.notify -> ngNotifySticker -> alert
+			function showNotify(message, type) {
+			try {
+			if (window.$ && typeof $.notify === 'function') {
+			$.notify({
+			message: String(message)
+			}, {
+			type: type || 'info'
+			});
+			return;
+			}
+			} catch (e) {}
+			try {
+			if (typeof ngNotifySticker === 'function') {
+			var cls = 'alert-' + (
+			type || 'info'
+			);
+			ngNotifySticker(String(message), {
+			className: cls,
+			closeBTN: true
+			});
+			return;
+			}
+			} catch (e) {}
+			try {
+			alert(String(message));
+			} catch (e) {}
+			}
+			async function handleTopbarClearCacheClick(ev) {
+			ev && ev.preventDefault && ev.preventDefault();
+			const browserOk = await clearBrowserCaches();
+			// Вызов RPC admin.statistics.cleanCache
+			try {
+			const resp = await $.ajax({
+			method: 'POST',
+			url: NGCMS.admin_url + '/rpc.php',
+			dataType: 'json',
+			data: {
+			json: 1,
+			methodName: 'admin.statistics.cleanCache',
+			params: JSON.stringify(
+			{token: '{{ token_statistics|e('js') }}'}
+			)
+			}
+			});
+			if (resp && resp.status) {
+			showNotify('{{ lang['notify.cache.server_ok']|e('js') }}', 'success');
+			} else {
+			showNotify('{{ lang['notify.cache.server_fail']|e('js') }}', 'danger');
+			}
+			} catch (e) {
+			showNotify('{{ lang['notify.cache.server_fail']|e('js') }}', 'danger');
+			}
+			// Браузер
+			if (browserOk) {
+			showNotify('{{ lang['notify.cache.browser_ok']|e('js') }}', 'success');
+			} else {
+			showNotify('{{ lang['notify.cache.browser_fail']|e('js') }}', 'warning');
+			}
+			return false;
+			}
+			document.addEventListener('DOMContentLoaded', function () {
+			var btn = document.getElementById('btn-clear-cache');
+			if (btn) {
+			btn.addEventListener('click', handleTopbarClearCacheClick);
+			}
+			// Инициализация Bootstrap tooltip
+			if (typeof $.fn.tooltip !== 'undefined') {
+			$('[data-bs-toggle="tooltip"]').tooltip();
+			}
+			});
+						</script>
+			 <script>
+							$(document).ready(function () { // Функция для определения ширины скроллбара
+			function getScrollbarWidth() {
+			var outer = document.createElement("div");
+			outer.style.visibility = "hidden";
+			outer.style.width = "100px";
+			outer.style.msOverflowStyle = "scrollbar"; // needed for WinJS apps
+			document.body.appendChild(outer);
+			var widthNoScroll = outer.offsetWidth;
+			// force scrollbars
+			outer.style.overflow = "scroll";
+			// add inner div
+			var inner = document.createElement("div");
+			inner.style.width = "100%";
+			outer.appendChild(inner);
+			var widthWithScroll = inner.offsetWidth;
+			// remove divs
+			outer.parentNode.removeChild(outer);
+			return widthNoScroll - widthWithScroll;
+			}
+			// Сохраняем ширину скроллбара в переменную
+			var scrollbarWidth = getScrollbarWidth();
+			// При открытии модального окна
+			$('.modal').on('show.bs.modal', function () {
+			if ($('body').height() > $(window).height()) {
+			$('body').addClass('modal-scrollbar-compensate');
+			}
+			$('body').addClass('modal-open-no-scroll');
+			});
+			// При закрытии модального окна
+			$('.modal').on('hidden.bs.modal', function () {
+			$('body').removeClass('modal-scrollbar-compensate');
+			$('body').removeClass('modal-open-no-scroll');
+			});
+			// Добавляем компенсацию ширины скроллбара
+			$(window).on('resize', function () {
+			if ($('body').hasClass('modal-scrollbar-compensate')) {
+			if (scrollbarWidth) {
+			$('body').css('margin-right', scrollbarWidth);
+			} else {
+			$('body').css('margin-right', '17px'); // Задаём стандартное значение на случай если не удалось определить ширину скроллбара
+			}
+			} else {
+			$('body').css('margin-right', '0');
+			}
+			}).trigger('resize');
+			});
+						</script>
 		</body>
 	</body>
 </html>
